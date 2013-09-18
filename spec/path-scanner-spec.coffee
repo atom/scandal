@@ -63,6 +63,10 @@ describe "PathScanner", ->
   describe "with a git repo", ->
     beforeEach ->
       rootPath = fs.realpathSync("spec/fixtures/git")
+      fs.rename(path.join(rootPath, 'git.git'), path.join(rootPath, '.git'))
+
+    afterEach ->
+      fs.rename(path.join(rootPath, '.git'), path.join(rootPath, 'git.git'))
 
     it "excludes files specified with .gitignore", ->
       scanner = new PathScanner(rootPath, excludeVcsIgnores: true)
