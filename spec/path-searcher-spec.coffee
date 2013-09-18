@@ -1,6 +1,7 @@
 fs = require 'fs'
 path = require 'path'
 PathSearcher = require '../lib/path-searcher'
+PathScanner = require '../lib/path-scanner'
 
 describe "PathSearcher", ->
   [searcher, rootPath] = []
@@ -112,3 +113,37 @@ describe "PathSearcher", ->
         expect(resultsHandler.callCount).toBe 2
         expect(resultsHandler.argsForCall[0][0].path).toBe filePaths[0]
         expect(resultsHandler.argsForCall[1][0].path).toBe filePaths[1]
+
+        # should have all the results as an arg in the done callback
+        results = [
+          resultsHandler.argsForCall[0][0]
+          resultsHandler.argsForCall[1][0]
+        ]
+        expect(finishedHandler.mostRecentCall.args[0]).toEqual results
+
+  describe "searchWithScanner()", ->
+    scanner = null
+
+    beforeEach ->
+      rootPath = fs.realpathSync("spec/fixtures/many-files")
+      scanner = new PathScanner(rootPath)
+
+    it "does not call results-found when there are no results found", ->
+      searcher.on('results-found', resultsHandler = jasmine.createSpy())
+      searcher.searchWithScanner(/omgnopenotinhere/gi, scanner, finishedHandler = jasmine.createSpy())
+
+      waitsFor ->
+        finishedHandler.callCount > 0
+
+      runs ->
+        expect(resultsHandler).not.toHaveBeenCalled()
+
+    it "does not call results-found when there are no results found", ->
+      searcher.on('results-found', resultsHandler = jasmine.createSpy())
+      searcher.searchWithScanner(/shorts/gi, scanner, finishedHandler = jasmine.createSpy())
+
+      waitsFor ->
+        finishedHandler.callCount > 0
+
+      runs ->
+        expect(resultsHandler).toHaveBeenCalled()
