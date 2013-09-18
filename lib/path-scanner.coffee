@@ -29,24 +29,22 @@ class PathScanner extends EventEmitter
       while fileCount--
         file = files.shift()
         filename = prefix + file
-        @processFile(filePath, filename)
+        @processFile(filename)
 
       @asyncCallDone()
 
-  processFile: (parentPath, filePath) ->
-    stat = @stat(parentPath, filePath)
+  processFile: (filePath) ->
+    stat = @stat(filePath)
     return unless stat
 
     if stat.isFile() and @pathFilter.isFileAccepted(path.relative(@rootPath, filePath))
       @stats[filePath] = stat
       @paths.push(filePath) unless _.contains(@paths, filePath)
-      @structure[parentPath] ?= []
-      @structure[parentPath].push(filePath) unless _.contains(@structure[parentPath], filePath)
       @emit('path-found', filePath)
     else if stat.isDirectory() and @pathFilter.isDirectoryAccepted(path.relative(@rootPath, filePath))
       @readDir(filePath)
 
-  stat: (parentPath, filePath) ->
+  stat: (filePath) ->
     return @stats[filePath] if @stats[filePath]?
 
     # lstat is SLOW, but what other way to determine if something is a directory or file ?
