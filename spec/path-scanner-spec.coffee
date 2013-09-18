@@ -22,3 +22,5 @@ describe "PathScanner", ->
       
       runs ->
         expect(scanner.paths.length).toBe 13
+        expect(scanner.paths).toContain path.join(rootPath, 'file1.txt')
+        expect(scanner.paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
