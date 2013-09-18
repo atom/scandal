@@ -14,7 +14,7 @@ class PathScanner extends EventEmitter
     @stats = {}
     @structure = {}
     @asyncCallsInProgress = 0
-    @pathFilter = new PathFilter(@options.inclusions, @options.exclusions, @options.hidden)
+    @pathFilter = new PathFilter(@rootPath, @options)
 
   scan: ->
     @readDir(@rootPath)

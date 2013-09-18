@@ -17,7 +17,8 @@
   "dependencies": {
     "underscore": "~1.5.1",
     "coffee-script": "~1.6.3",
-    "minimatch": "0.2.11"
+    "minimatch": "0.2.11",
+    "git-utils": "0.24.0"
   },
   "devDependencies": {
     "jasmine-focused": "~0.12.0"

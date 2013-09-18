@@ -1,4 +1,5 @@
 {Minimatch} = require 'minimatch'
+GitUtils = require 'git-utils'
 
 module.exports =
 class PathFilter
@@ -7,9 +8,11 @@ class PathFilter
   @escapeRegExp: (str) ->
     str.replace(/([\/'*+?|()\[\]{}.\^$])/g, '\\$1')
 
-  constructor: (inclusions, exclusions, showHidden) ->
+  constructor: (rootPath, {inclusions, exclusions, showHidden, excludeVcsIgnores}={}) ->
     @inclusions = @createMatchers(inclusions)
     @exclusions = @createMatchers(exclusions)
+
+    @repo = GitUtils.open(rootPath) if excludeVcsIgnores
 
     @excludeHidden() if showHidden != true
 
@@ -23,6 +26,8 @@ class PathFilter
     !@isPathIgnored(fileOrDirectory, filepath) && @isPathIncluded(fileOrDirectory, filepath)
 
   isPathIgnored: (fileOrDirectory, filepath) ->
+    return true if @repo?.isIgnored(@repo.relativize(filepath))
+
     exclusions = @exclusions[fileOrDirectory]
     r = exclusions.length
     while r--
