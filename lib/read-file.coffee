@@ -20,27 +20,6 @@ concat = (str1, str2) ->
 headerBuffer = new Buffer(256)
 chunkedBuffer = null
 
-# readWholeFile = (path, size, callback) ->
-#   text = null
-#   fd = fs.openSync(path, "r")
-#   try
-#     bytesRead = fs.readSync(fd, headerBuffer, 0, Math.min(size, 256))
-#
-#     if !isBinaryFile(headerBuffer, bytesRead)
-#       remainingBytes = size - bytesRead;
-#       if remainingBytes > 0
-#         textBuffer = new Buffer(size)
-#         bytesRead = fs.readSync(fd, textBuffer, 0, size);
-#         text = textBuffer.toString("utf8", 0, bytesRead)
-#       else
-#         text = headerBuffer.toString("utf8", 0, bytesRead);
-#
-#     if text?
-#       callback(text.split('\n'), 1)
-#
-#   finally
-#     fs.closeSync(fd)
-
 readFile = (path, callback) ->
   chunkSize = readFile.CHUNK_SIZE
   line = 1
@@ -54,7 +33,7 @@ readFile = (path, callback) ->
     bytesRead = fs.readSync(fd, chunkedBuffer, 0, chunkSize, 0)
 
     while bytesRead
-      # Scarier looking. Uses least new objects
+      # Scary looking. Uses very few new objects
       index = lastIndexOf(chunkedBuffer, bytesRead, 10)
       if index < 0
         # no newlines here, the whole thing is a remainder
@@ -70,22 +49,6 @@ readFile = (path, callback) ->
         newRemainder = chunkedBuffer.toString("utf8", index+1, bytesRead)
         str = chunkedBuffer.toString("utf8", 0, index)
         lines = str.split('\n')
-
-      # Creates a lot of arrays.
-      # str = chunkedBuffer.toString("utf8", 0, bytesRead)
-      # lines = str.split('\n')
-      #
-      # if lines.length == 1
-      #   # no newlines here, the whole thing is a remainder
-      #   newRemainder = str
-      #   lines = null
-      # else if str[bytesRead-1] == '\n'
-      #   # the last char is a newline
-      #   newRemainder = null
-      #   lines = lines.slice(0, lines.length-1)
-      # else
-      #   newRemainder = lines[lines.length-1]
-      #   lines = lines.slice(0, lines.length-1)
 
       if not lines? or lines.length == 0
         remainder = concat(remainder, newRemainder)
