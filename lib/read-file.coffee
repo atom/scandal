@@ -7,16 +7,6 @@ lastIndexOf = (buffer, length, char) ->
     return i if buffer[i] == char
   -1
 
-concat = (str1, str2) ->
-  if str1? and str2?
-    str1 + str2
-  else if not str1? and not str2?
-    ''
-  else if str1?
-    str1
-  else
-    str2
-
 headerBuffer = new Buffer(256)
 chunkedBuffer = null
 
@@ -26,7 +16,7 @@ readFile = (path, callback) ->
   fd = fs.openSync(path, "r");
   try
     offset = 0
-    remainder = null
+    remainder = ''
     return if isBinaryFile(headerBuffer, fs.readSync(fd, headerBuffer, 0, 256))
 
     chunkedBuffer ?= new Buffer(chunkSize)
@@ -42,7 +32,7 @@ readFile = (path, callback) ->
         lines = null
       else if index > -1 and index == bytesRead - 1
         # the last char is a newline
-        newRemainder = null
+        newRemainder = ''
         str = chunkedBuffer.toString("utf8", 0, bytesRead - 1)
         lines = str.split('\n')
       else
@@ -51,9 +41,9 @@ readFile = (path, callback) ->
         lines = str.split('\n')
 
       if not lines? or lines.length == 0
-        remainder = concat(remainder, newRemainder)
+        remainder = remainder + newRemainder
       else
-        lines[0] = remainder + lines[0] if remainder?
+        lines[0] = remainder + lines[0] if remainder
         callback(lines, line)
         remainder = newRemainder
 
