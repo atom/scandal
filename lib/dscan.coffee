@@ -45,15 +45,6 @@ singleProcessSearch = (regex, scanner, searcher, doneCallback) ->
   scanner.on 'finished-scanning', onFinishedScanning
   scanner.scan()
 
-singleProcessScanFirstSearch = (regex, scanner, searcher, doneCallback) ->
-  runSearch = ->
-    scanner.removeListener 'finished-scanning', runSearch
-    searcher.searchPaths regex, scanner.paths, ->
-      doneCallback()
-
-  scanner.on 'finished-scanning', runSearch
-  scanner.scan()
-
 singleProcessSearchMain = (options) ->
   searcher = new PathSearcher()
   scanner = new PathScanner(options.pathToScan, options)
@@ -76,7 +67,6 @@ singleProcessSearchMain = (options) ->
         console.log '  ', result.lineNumber + ":", result.matchText, 'at', result.range
 
   singleProcessSearch buildRegex(options.search), scanner, searcher, ->
-  # singleProcessScanFirstSearch buildRegex(options.regex), scanner, searcher, ->
     console.timeEnd 'Single Process Search'
     console.log "#{resultCount} matches in #{count} files. Searched #{pathCount} files"
 
