@@ -19,7 +19,8 @@
     "coffee-script": "~1.6.3",
     "minimatch": "0.2.11",
     "git-utils": "0.24.0",
-    "byline": "~3.1.2"
+    "argparse": "~0.1",
+    "isbinaryfile": ""
   },
   "devDependencies": {
     "jasmine-focused": "~0.12.0"

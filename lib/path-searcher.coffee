@@ -1,7 +1,7 @@
 _ = require("underscore")
 fs = require("fs")
 {EventEmitter} = require("events")
-byline = require("byline")
+readFile = require("./read-file")
 
 module.exports =
 class PathSearcher extends EventEmitter
@@ -20,27 +20,24 @@ class PathSearcher extends EventEmitter
 
         doneCallback(results) if ++searches == paths.length
 
-  searchPath: (regex, path, doneCallback) ->
+  searchPath: (regex, path, stats, doneCallback) ->
     results = null
-    lineNumber = 1
 
-    stream = byline(fs.createReadStream(path))
+    readFile path, (lines, lineNumber) =>
+      for line in lines
+        matches = @searchLine(regex, line, lineNumber)
 
-    stream.on 'data', (line) =>
-      matches = @searchLine(regex, line.toString(), lineNumber)
+        if matches?
+          results ?= []
+          results.push(match) for match in matches
 
-      if matches?
-        results ?= []
-        results.push(match) for match in matches
+        lineNumber++
 
-      lineNumber++
+    if results?.length
+      output = {path, results}
+      @emit('results-found', output)
 
-    stream.on 'end', =>
-      if results?.length
-        output = {path, results}
-        @emit('results-found', output)
-
-      doneCallback(output)
+    doneCallback(output)
 
   searchLine: (regex, line, lineNumber) ->
     matches = null
