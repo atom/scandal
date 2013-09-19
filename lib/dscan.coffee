@@ -1,8 +1,14 @@
+_ = require 'underscore'
 {ArgumentParser} = require 'argparse'
 PathSearcher = require './path-searcher'
 PathScanner = require './path-scanner'
+path = require "path"
 
 MAX_CONCURRENT_SEARCH = 20
+
+###
+Single Process
+###
 
 singleProcessSearch = (regex, scanner, searcher, doneCallback) ->
   finishedScanning = false
@@ -85,6 +91,133 @@ singleProcessScanMain = (options) ->
 
   scanner.scan()
 
+
+###
+multiprocess!
+###
+
+multiProcessScan = ->
+  require("coffee-script");
+  PathScanner = require './path-scanner.coffee'
+
+  PATHS_TO_SEARCH = 50
+
+  emit = (event, arg) ->
+    process.send({event, arg})
+
+  options =
+    pathToScan: process.env.pathToScan
+    showHidden: process.env.showHidden == 'true'
+    excludeVcsIgnores: process.env.excludeVcsIgnores == 'true'
+
+  scanner = new PathScanner(options.pathToScan, options)
+
+  paths = []
+  scanner.on 'path-found', (path) ->
+    paths.push(path)
+    if paths.length == PATHS_TO_SEARCH
+      emit('paths-found', paths)
+      paths = []
+
+  scanner.on 'finished-scanning', ->
+    emit('paths-found', paths) if paths.length
+    emit('finished')
+
+  scanner.scan()
+
+multiProcessSearch = ->
+  require("coffee-script");
+  PathSearcher = require './path-searcher.coffee'
+
+  emit = (event, arg, id) ->
+    process.send({event, arg, id})
+
+  options = process.env
+  searcher = new PathSearcher()
+  regex = new RegExp(options.search, 'gi')
+
+  process.on 'message', ({event, arg, id}) ->
+    if event == 'search'
+      console.log "#{id} SPROCESS: searching #{arg.length}"
+      searcher.searchPaths regex, arg, (results) ->
+        console.log "#{id} SPROCESS: finished"
+        emit('finished-search', results, id)
+
+flush = (childProcess) ->
+  childProcess.stdio.forEach (stream, fd, stdio) ->
+    return if !stream || !stream.readable || stream._consuming || stream._readableState.flowing
+    stream.resume()
+
+fork = (task, env) ->
+  child_process = require 'child_process'
+  args = [task, '--harmony_collections']
+  child_process.fork '--eval', args, {env, cwd: __dirname}
+
+kill = (childProcess) ->
+  childProcess.removeAllListeners()
+  childProcess.kill()
+
+multiProcessSearchMain = (options) ->
+  options.pathToScan = path.resolve(options.pathToScan)
+  env = _.extend({}, process.env, options)
+
+  makeTask = (fn) ->
+    "(#{fn.toString()})();"
+
+  scanTask = makeTask(multiProcessScan)
+  searchTask = makeTask(multiProcessSearch)
+
+  console.time 'Multi Process Scan'
+
+  ids = 0
+  scanFinished = false
+  searches = 0
+
+  scanProcess = fork(scanTask, env)
+  searchProcess = fork(searchTask, env)
+
+  search = (paths) ->
+    searches++
+    id = ids++
+    console.log "#{id} searching #{paths.length} paths"
+    searchProcess.send({event: 'search', arg: paths, id})
+    flush(searchProcess)
+
+  scanProcess.on 'message', ({event, arg}) ->
+    if event == 'paths-found'
+      search(arg)
+
+    else if event == 'finished'
+      kill(scanProcess)
+      console.log 'Scan done'
+      scanFinished = true
+
+      console.log searches
+      if searches == 0
+        console.log searches
+        kill(searchProcess)
+        console.timeEnd 'Multi Process Scan'
+        console.log 'done, prolly'
+
+  searchProcess.on 'drain', ->
+    console.log 'drain!', arguments
+  searchProcess.on 'error', ->
+    console.log 'ERROR', arguments
+  searchProcess.on 'message', ({event, arg, id}) ->
+    if event == 'finished-search'
+      console.log "#{id} searching done"
+      searches--
+
+      # if arg
+      #   for result in arg
+      #     console.log "#{result.results.length} in #{result.path}"
+
+      if scanFinished and searches == 0
+        kill(searchProcess)
+        console.timeEnd 'Multi Process Scan'
+        console.log 'done?'
+
+
 buildRegex = (pattern) ->
   new RegExp(pattern, 'gi')
 
@@ -103,7 +236,10 @@ main = ->
   options = argParser.parseArgs()
 
   if options.search
-    singleProcessSearchMain(options)
+    if options.multiprocess
+      multiProcessSearchMain(options)
+    else
+      singleProcessSearchMain(options)
   else
     singleProcessScanMain(options)
 
