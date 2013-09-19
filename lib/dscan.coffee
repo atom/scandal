@@ -45,23 +45,55 @@ singleProcessSearch = (regex, scanner, searcher, doneCallback) ->
   scanner.on 'finished-scanning', onFinishedScanning
   scanner.scan()
 
-singleProcessMain = (options) ->
+singleProcessScanFirstSearch = (regex, scanner, searcher, doneCallback) ->
+  runSearch = ->
+    scanner.removeListener 'finished-scanning', runSearch
+    searcher.searchPaths regex, scanner.paths, ->
+      doneCallback()
+
+  scanner.on 'finished-scanning', runSearch
+  scanner.scan()
+
+singleProcessSearchMain = (options) ->
   searcher = new PathSearcher()
-  scanner = new PathScanner(options.pathToSearch, options)
+  scanner = new PathScanner(options.pathToScan, options)
   console.time 'Single Process Search'
 
   count = 0
+  resultCount = 0
+  pathCount = 0
 
-  if options.verbose
-    searcher.on 'results-found', (results) ->
-      console.log results.path
-      count++
-      #for result in results.results
-      #  console.log '  ', result.lineNumber + ":", result.matchText, 'at', result.range
+  scanner.on 'path-found', (path) ->
+    pathCount++
 
-  singleProcessSearch buildRegex(options.regex), scanner, searcher, ->
+  searcher.on 'results-found', (results) ->
+    count++
+    console.log results.path if options.verbose
+
+    for result in results.results
+      resultCount++
+      if options.verbose
+        console.log '  ', result.lineNumber + ":", result.matchText, 'at', result.range
+
+  singleProcessSearch buildRegex(options.search), scanner, searcher, ->
+  # singleProcessScanFirstSearch buildRegex(options.regex), scanner, searcher, ->
     console.timeEnd 'Single Process Search'
-    console.log 'Searched', scanner.paths.length, '; found in', count
+    console.log "#{resultCount} matches in #{count} files. Searched #{pathCount} files"
+
+singleProcessScanMain = (options) ->
+  scanner = new PathScanner(options.pathToScan, options)
+  console.time 'Single Process Scan'
+
+  count = 0
+  scanner.on 'path-found', (path) ->
+    count++
+    console.log path if options.verbose
+
+  scanner.on 'finished-scanning', ->
+    console.timeEnd 'Single Process Scan'
+    console.log "Found #{count} paths"
+
+  scanner.scan()
 
 buildRegex = (pattern) ->
   new RegExp(pattern, 'gi')
@@ -75,11 +107,14 @@ main = ->
   argParser.addArgument([ '-m', '--multiprocess' ], action: 'storeTrue')
   argParser.addArgument([ '-e', '--excludeVcsIgnores' ], action: 'storeTrue')
   argParser.addArgument([ '-o', '--verbose' ], action: 'storeTrue')
-  argParser.addArgument(['regex'])
-  argParser.addArgument(['pathToSearch'])
+  argParser.addArgument([ '-s', '--search' ])
+  argParser.addArgument(['pathToScan'])
 
   options = argParser.parseArgs()
 
-  singleProcessMain(options)
+  if options.search
+    singleProcessSearchMain(options)
+  else
+    singleProcessScanMain(options)
 
 module.exports = main
