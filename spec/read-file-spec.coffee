@@ -17,7 +17,6 @@ describe "readFile", ->
     allLines = []
     readFile rootPath, (lines, lineNumber) ->
       allLines = allLines.concat(lines)
-      console.log lines, lineNumber
 
     sample = [
       'var quicksort = function () {'
