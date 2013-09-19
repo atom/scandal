@@ -243,4 +243,4 @@ main = ->
   else
     singleProcessScanMain(options)
 
-module.exports = main
+module.exports = {main, singleProcessSearch, PathSearcher, PathScanner}
