@@ -10,9 +10,6 @@ module.exports =
 class PathScanner extends EventEmitter
 
   constructor: (@rootPath, @options={}) ->
-    @paths = []
-    @stats = {}
-    @structure = {}
     @asyncCallsInProgress = 0
     @pathFilter = new PathFilter(@rootPath, @options)
 
@@ -38,14 +35,11 @@ class PathScanner extends EventEmitter
     return unless stat
 
     if stat.isFile() and @pathFilter.isFileAccepted(path.relative(@rootPath, filePath))
-      @stats[filePath] = stat
-      @paths.push(filePath) unless _.contains(@paths, filePath)
       @emit('path-found', filePath)
     else if stat.isDirectory() and @pathFilter.isDirectoryAccepted(path.relative(@rootPath, filePath))
       @readDir(filePath)
 
   stat: (filePath) ->
-    return @stats[filePath] if @stats[filePath]?
 
     # lstat is SLOW, but what other way to determine if something is a directory or file ?
     # also, sync is about 200ms faster than async...
