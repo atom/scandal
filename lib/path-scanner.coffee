@@ -11,6 +11,8 @@ class PathScanner extends EventEmitter
 
   constructor: (@rootPath, @options={}) ->
     @asyncCallsInProgress = 0
+    @rootPath = path.resolve(@rootPath)
+    @rootPathLength = @rootPath.length
     @pathFilter = new PathFilter(@rootPath, @options)
 
   scan: ->
@@ -30,13 +32,23 @@ class PathScanner extends EventEmitter
 
       @asyncCallDone()
 
+  relativize: (filePath) ->
+    len = filePath.length
+    i = @rootPathLength
+    while i < len
+      break unless filePath[i] == DIR_SEP
+      i++
+
+    filePath.slice(i)
+
   processFile: (filePath) ->
+    relPath = @relativize(filePath)
     stat = @stat(filePath)
     return unless stat
 
-    if stat.isFile() and @pathFilter.isFileAccepted(path.relative(@rootPath, filePath))
+    if stat.isFile() and @pathFilter.isFileAccepted(relPath)
       @emit('path-found', filePath)
-    else if stat.isDirectory() and @pathFilter.isDirectoryAccepted(path.relative(@rootPath, filePath))
+    else if stat.isDirectory() and @pathFilter.isDirectoryAccepted(relPath)
       @readDir(filePath)
 
   stat: (filePath) ->
