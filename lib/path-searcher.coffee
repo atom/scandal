@@ -20,7 +20,7 @@ class PathSearcher extends EventEmitter
 
         doneCallback(results) if ++searches == paths.length
 
-  searchPath: (regex, path, stats, doneCallback) ->
+  searchPath: (regex, path, doneCallback) ->
     results = null
 
     readFile path, (lines, lineNumber) =>
@@ -52,29 +52,3 @@ class PathSearcher extends EventEmitter
 
     regex.lastIndex = 0
     matches
-
-  searchWithScanner: (regex, pathScanner, doneCallback) ->
-    finishedScanning = false
-    pathsToSearch = 0
-
-    scanPath = (filePath) =>
-      pathsToSearch++
-      @searchPath regex, filePath, ->
-        pathsToSearch--
-        checkIfFinished()
-
-    onFinishedScanning = ->
-      finishedScanning = true
-      checkIfFinished()
-
-    checkIfFinished = ->
-      finish() if finishedScanning and pathsToSearch == 0
-
-    finish = ->
-      pathScanner.removeListener 'path-found', scanPath
-      pathScanner.removeListener 'finished-scanning', onFinishedScanning
-      doneCallback()
-
-    pathScanner.on 'path-found', scanPath
-    pathScanner.on 'finished-scanning', onFinishedScanning
-    pathScanner.scan()

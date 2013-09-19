@@ -12,7 +12,7 @@ singleProcessSearch = (regex, scanner, searcher, doneCallback) ->
 
   searchPath = (filePath) ->
     pathsSearching++
-    searcher.searchPath regex, filePath, scanner.stats, ->
+    searcher.searchPath regex, filePath, ->
       pathCount--
       pathsSearching--
       checkIfFinished()

@@ -120,30 +120,3 @@ describe "PathSearcher", ->
           resultsHandler.argsForCall[1][0]
         ]
         expect(finishedHandler.mostRecentCall.args[0]).toEqual results
-
-  describe "searchWithScanner()", ->
-    scanner = null
-
-    beforeEach ->
-      rootPath = fs.realpathSync("spec/fixtures/many-files")
-      scanner = new PathScanner(rootPath)
-
-    it "does not call results-found when there are no results found", ->
-      searcher.on('results-found', resultsHandler = jasmine.createSpy())
-      searcher.searchWithScanner(/omgnopenotinhere/gi, scanner, finishedHandler = jasmine.createSpy())
-
-      waitsFor ->
-        finishedHandler.callCount > 0
-
-      runs ->
-        expect(resultsHandler).not.toHaveBeenCalled()
-
-    it "does not call results-found when there are no results found", ->
-      searcher.on('results-found', resultsHandler = jasmine.createSpy())
-      searcher.searchWithScanner(/shorts/gi, scanner, finishedHandler = jasmine.createSpy())
-
-      waitsFor ->
-        finishedHandler.callCount > 0
-
-      runs ->
-        expect(resultsHandler).toHaveBeenCalled()
