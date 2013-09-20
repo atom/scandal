@@ -3,6 +3,7 @@ _ = require 'underscore'
 PathSearcher = require './path-searcher'
 PathScanner = require './path-scanner'
 path = require "path"
+split = require "split"
 
 MAX_CONCURRENT_SEARCH = 20
 
@@ -93,17 +94,34 @@ singleProcessScanMain = (options) ->
 
 
 ###
-multiprocess!
+Multiprocess. Really broken
 ###
+
+makeTask = (fn) ->
+  "(#{fn.toString()})();"
+
+fork = (task, env) ->
+  child_process = require 'child_process'
+  args = [task, '--harmony_collections']
+  child_process.fork '--eval', args, {env, cwd: __dirname, silent: true}
+
+kill = (childProcess) ->
+  childProcess.removeAllListeners()
+  childProcess.kill()
+  null
 
 multiProcessScan = ->
   require("coffee-script");
   PathScanner = require './path-scanner.coffee'
 
   PATHS_TO_SEARCH = 50
+  STOP_CHAR = String.fromCharCode(0)
 
-  emit = (event, arg) ->
-    process.send({event, arg})
+  emitPaths = (paths) ->
+    process.stdout.write(JSON.stringify(paths)+'\n')
+  done = ->
+    process.stdout.write(STOP_CHAR+'\n')
+    process.send(event: 'finished')
 
   options =
     pathToScan: process.env.pathToScan
@@ -116,12 +134,12 @@ multiProcessScan = ->
   scanner.on 'path-found', (path) ->
     paths.push(path)
     if paths.length == PATHS_TO_SEARCH
-      emit('paths-found', paths)
+      emitPaths(paths)
       paths = []
 
   scanner.on 'finished-scanning', ->
-    emit('paths-found', paths) if paths.length
-    emit('finished')
+    emitPaths(paths) if paths.length
+    done()
 
   scanner.scan()
 
@@ -129,94 +147,121 @@ multiProcessSearch = ->
   require("coffee-script");
   PathSearcher = require './path-searcher.coffee'
 
-  emit = (event, arg, id) ->
-    process.send({event, arg, id})
+  searches = 0
+
+  START_CHAR = String.fromCharCode(1)
+  END_CHAR = String.fromCharCode(4)
+
+  emitStart = ->
+    process.stdout.write(START_CHAR+'\n')
+  emitResults = (results) ->
+    if results
+      results = (JSON.stringify(res) for res in results).join('\n')
+      process.stdout.write(results+'\n')
+    emitEnd()
+  emitEnd = ->
+    process.stdout.write(END_CHAR+'\n')
 
   options = process.env
   searcher = new PathSearcher()
   regex = new RegExp(options.search, 'gi')
 
-  process.on 'message', ({event, arg, id}) ->
-    if event == 'search'
-      console.log "#{id} SPROCESS: searching #{arg.length}"
-      searcher.searchPaths regex, arg, (results) ->
-        console.log "#{id} SPROCESS: finished"
-        emit('finished-search', results, id)
+  offset = 0
+  # This is terrible and unreliable and sometimes infinite loops. From:
+  # https://github.com/substack/stream-handbook#consuming-a-readable-stream
+  readLine = (stdin) ->
+    buf = stdin.read()
+    return null unless buf
 
-flush = (childProcess) ->
-  childProcess.stdio.forEach (stream, fd, stdio) ->
-    return if !stream || !stream.readable || stream._consuming || stream._readableState.flowing
-    stream.resume()
+    while offset < buf.length
+      if buf[offset] == 0x0a
+        data = buf.slice(0, offset).toString()
+        buf = buf.slice(offset + 1)
+        offset = 0
+        stdin.unshift(buf)
+        return data
+      offset++
 
-fork = (task, env) ->
-  child_process = require 'child_process'
-  args = [task, '--harmony_collections']
-  child_process.fork '--eval', args, {env, cwd: __dirname}
+    stdin.unshift(buf);
+    null
 
-kill = (childProcess) ->
-  childProcess.removeAllListeners()
-  childProcess.kill()
+  process.stdin.on 'readable', ->
+    data = readLine(process.stdin)
+    return unless data
+
+    paths = JSON.parse(data)
+
+    emitStart()
+    searcher.searchPaths regex, paths, (results) ->
+      emitResults(results)
 
 multiProcessSearchMain = (options) ->
   options.pathToScan = path.resolve(options.pathToScan)
   env = _.extend({}, process.env, options)
 
-  makeTask = (fn) ->
-    "(#{fn.toString()})();"
+  START_CHAR = String.fromCharCode(1)
+  END_CHAR = String.fromCharCode(4)
 
   scanTask = makeTask(multiProcessScan)
   searchTask = makeTask(multiProcessSearch)
 
   console.time 'Multi Process Scan'
 
-  ids = 0
-  scanFinished = false
   searches = 0
+  finished = false
+  scanFinished = false
+
+  resultCount = 0
+  pathCount = 0
 
   scanProcess = fork(scanTask, env)
   searchProcess = fork(searchTask, env)
 
-  search = (paths) ->
-    searches++
-    id = ids++
-    console.log "#{id} searching #{paths.length} paths"
-    searchProcess.send({event: 'search', arg: paths, id})
-    flush(searchProcess)
+  searchProcess.stdin.setEncoding = 'utf-8';
+  scanProcess.stdout.on 'data', (data) ->
+    searchProcess.stdin.write(data)
+
+  searchProcess.stderr.pipe(process.stderr)
+
+  searchProcess.stdout.pipe(split()).on 'data', (line) ->
+    if line[0] == START_CHAR
+      console.log "search start"
+      searches++
+    else if line[0] == END_CHAR
+      searches--
+      console.log "search end #{searches}"
+    else if line and line.length
+      results = JSON.parse(line)
+      if results
+        pathCount++
+        resultCount += results.results.length
+        console.log "#{results.results.length} matches in #{results.path}"
+
+    maybeEnd()
 
   scanProcess.on 'message', ({event, arg}) ->
-    if event == 'paths-found'
-      search(arg)
-
-    else if event == 'finished'
-      kill(scanProcess)
-      console.log 'Scan done'
+    # This is a race condition with scanProcess.stdout 'data'. The finished message should be a
+    # null char in stdout or something. Sometimes this happens before the last
+    # stdout event
+    if event == 'finished'
       scanFinished = true
+      console.log 'Scan done'
 
-      console.log searches
-      if searches == 0
-        console.log searches
-        kill(searchProcess)
-        console.timeEnd 'Multi Process Scan'
-        console.log 'done, prolly'
+      maybeEnd()
 
-  searchProcess.on 'drain', ->
-    console.log 'drain!', arguments
-  searchProcess.on 'error', ->
-    console.log 'ERROR', arguments
-  searchProcess.on 'message', ({event, arg, id}) ->
-    if event == 'finished-search'
-      console.log "#{id} searching done"
-      searches--
-
-      # if arg
-      #   for result in arg
-      #     console.log "#{result.results.length} in #{result.path}"
-
+  maybeEnd = ->
+    return if finished
+    setTimeout ->
       if scanFinished and searches == 0
+        kill(scanProcess)
         kill(searchProcess)
-        console.timeEnd 'Multi Process Scan'
-        console.log 'done?'
+        end()
+    , 10
 
+  end = ->
+    finished = true
+    console.timeEnd 'Multi Process Scan'
+    console.log "#{resultCount} matches in #{pathCount} files"
 
 buildRegex = (pattern) ->
   new RegExp(pattern, 'gi')
@@ -243,4 +288,4 @@ main = ->
   else
     singleProcessScanMain(options)
 
-module.exports = {main, singleProcessSearch, PathSearcher, PathScanner}
+module.exports = {main, singleProcessSearch, PathSearcher, PathScanner, multiProcessSearchMain}

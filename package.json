@@ -20,7 +20,8 @@
     "minimatch": "0.2.11",
     "git-utils": "0.24.0",
     "argparse": "~0.1",
-    "isbinaryfile": ""
+    "isbinaryfile": "",
+    "split": "~0.2"
   },
   "devDependencies": {
     "jasmine-focused": "~0.12.0"
