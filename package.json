@@ -25,8 +25,5 @@
   },
   "devDependencies": {
     "jasmine-focused": "~0.12.0"
-  },
-  "publishConfig": {
-    "registry": "https://atom.iriscouch.com/registry/_design/app/_rewrite"
   }
 }
