@@ -119,9 +119,8 @@ multiProcessScan = ->
 
   emitPaths = (paths) ->
     process.stdout.write(JSON.stringify(paths)+'\n')
-  done = ->
+  emitEnd = ->
     process.stdout.write(STOP_CHAR+'\n')
-    process.send(event: 'finished')
 
   options =
     pathToScan: process.env.pathToScan
@@ -139,7 +138,7 @@ multiProcessScan = ->
 
   scanner.on 'finished-scanning', ->
     emitPaths(paths) if paths.length
-    done()
+    emitEnd()
 
   scanner.scan()
 
@@ -151,6 +150,7 @@ multiProcessSearch = ->
 
   START_CHAR = String.fromCharCode(1)
   END_CHAR = String.fromCharCode(4)
+  STOP_CHAR = String.fromCharCode(0)
 
   emitStart = ->
     process.stdout.write(START_CHAR+'\n')
@@ -189,11 +189,13 @@ multiProcessSearch = ->
     data = readLine(process.stdin)
     return unless data
 
-    paths = JSON.parse(data)
-
     emitStart()
-    searcher.searchPaths regex, paths, (results) ->
-      emitResults(results)
+    if data[0] == STOP_CHAR
+      emitEnd()
+    else
+      paths = JSON.parse(data)
+      searcher.searchPaths regex, paths, (results) ->
+        emitResults(results)
 
 multiProcessSearchMain = (options) ->
   options.pathToScan = path.resolve(options.pathToScan)
@@ -201,6 +203,7 @@ multiProcessSearchMain = (options) ->
 
   START_CHAR = String.fromCharCode(1)
   END_CHAR = String.fromCharCode(4)
+  STOP_CHAR = String.fromCharCode(0)
 
   scanTask = makeTask(multiProcessScan)
   searchTask = makeTask(multiProcessSearch)
@@ -218,20 +221,28 @@ multiProcessSearchMain = (options) ->
   searchProcess = fork(searchTask, env)
 
   searchProcess.stdin.setEncoding = 'utf-8';
-  scanProcess.stdout.on 'data', (data) ->
-    searchProcess.stdin.write(data)
+  scanProcess.stdout.pipe(split()).on 'data', (data) ->
+    if data[0] == STOP_CHAR
+      scanFinished = true
+      console.log 'Scan done'
+      maybeEnd()
+    else
+      searches++
+      searchProcess.stdin.write(data+'\n')
 
   searchProcess.stderr.pipe(process.stderr)
 
   searchProcess.stdout.pipe(split()).on 'data', (line) ->
     if line[0] == START_CHAR
       console.log "search start"
-      searches++
     else if line[0] == END_CHAR
       searches--
       console.log "search end #{searches}"
     else if line and line.length
-      results = JSON.parse(line)
+      try
+        results = JSON.parse(line)
+      catch e
+        console.log "AHH", e
       if results
         pathCount++
         resultCount += results.results.length
@@ -240,23 +251,16 @@ multiProcessSearchMain = (options) ->
     maybeEnd()
 
   scanProcess.on 'message', ({event, arg}) ->
-    # This is a race condition with scanProcess.stdout 'data'. The finished message should be a
-    # null char in stdout or something. Sometimes this happens before the last
-    # stdout event
-    if event == 'finished'
-      scanFinished = true
-      console.log 'Scan done'
-
-      maybeEnd()
+    console.log event, arg
+  searchProcess.on 'message', ({event, arg}) ->
+    console.log event, arg
 
   maybeEnd = ->
     return if finished
-    setTimeout ->
-      if scanFinished and searches == 0
-        kill(scanProcess)
-        kill(searchProcess)
-        end()
-    , 10
+    if scanFinished and searches == 0
+      kill(scanProcess)
+      kill(searchProcess)
+      end()
 
   end = ->
     finished = true
