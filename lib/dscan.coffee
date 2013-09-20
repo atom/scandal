@@ -200,7 +200,7 @@ multiProcessSearchMain = (options) ->
   scanTask = makeTask(multiProcessScan)
   searchTask = makeTask(multiProcessSearch)
 
-  console.time 'Multi Process Scan'
+  console.time 'Multi Process Search'
 
   searches = 0
   finished = false
@@ -216,7 +216,6 @@ multiProcessSearchMain = (options) ->
   scanProcess.stdout.pipe(split()).on 'data', (data) ->
     if data[0] == STOP_CHAR
       scanFinished = true
-      console.log 'Scan done'
       maybeEnd()
     else
       searches++
@@ -231,10 +230,7 @@ multiProcessSearchMain = (options) ->
       searches--
       console.log "search end #{searches}" if options.verbose
     else if line and line.length
-      try
-        results = JSON.parse(line)
-      catch e
-        console.log "AHH", e
+      results = JSON.parse(line)
       if results
         pathCount++
         resultCount += results.results.length
@@ -256,7 +252,7 @@ multiProcessSearchMain = (options) ->
 
   end = ->
     finished = true
-    console.timeEnd 'Multi Process Scan'
+    console.timeEnd 'Multi Process Search'
     console.log "#{resultCount} matches in #{pathCount} files"
 
 buildRegex = (pattern) ->
