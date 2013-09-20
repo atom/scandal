@@ -1,18 +1,18 @@
 {
-  "name": "dscan",
+  "name": "scandal",
   "version": "0.1.0",
   "description": "Directory Scan Utilities",
-  "main": "./lib/dscan.coffee",
+  "main": "./lib/scandal.coffee",
   "scripts": {
     "test": "jasmine-focused --captureExceptions --coffee spec"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/atom/dscan"
+    "url": "https://github.com/atom/scandal"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/atom/dscan/issues"
+    "url": "https://github.com/atom/scandal/issues"
   },
   "dependencies": {
     "underscore": "~1.5.1",

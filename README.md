@@ -1,6 +1,6 @@
-# dscan - Directory scan
+# scandal - Scandalous directory scanning and searching
 
-dscan provides two utilities:
+scandal provides two utilities:
 
 * Scanning a directory for paths matching a set of glob inclusions or exclusions. For example, you want to find a list of paths to search that match a certain pattern, but are not ignored by the `.gitignore`.
 
@@ -14,18 +14,18 @@ It is written to be simple, flexible and efficient. Dscan does the minimum.
 
 We want to provide modules to combine in any way you'd like. Want to scan in one process and search in another? You can do that.
 
-To be clear, dscan is not a CLI. It can be used from the terminal, but in practice it's only used for benchmarking.
+To be clear, scandal is not a CLI. It can be used from the terminal, but in practice it's only used for benchmarking.
 
 ## Objects
 
-dscan provides two main modules: `PathScanner` and `PathSearcher`.
+scandal provides two main modules: `PathScanner` and `PathSearcher`.
 
 ### PathScanner
 
 Usage is simple:
 
 ```coffeescript
-{PathScanner} = require 'dscan'
+{PathScanner} = require 'scandal'
 scanner = new PathScanner('/Users/me/myDopeProject', options)
 
 scanner.on 'path-found', (path) ->
@@ -49,7 +49,7 @@ scanner.scan()
 ### PathSearcher
 
 ```coffeescript
-{PathSearcher} = require 'dscan'
+{PathSearcher} = require 'scandal'
 searcher = new PathSearcher()
 
 # You can subscribe to a `results-found` event
@@ -93,7 +93,7 @@ A third object, `PathFilter` is available, but intended for use by the `PathScan
 If you dont want to think about combining the `PathScanner` and `PathSearcher` in your own way, a `search` is function provided.
 
 ```coffeescript
-{search, PathScanner, PathSearcher} = require 'dscan'
+{search, PathScanner, PathSearcher} = require 'scandal'
 
 path = '/path/to/search'
 scanner = new PathScanner(path, excludeVcsIgnores: true)
