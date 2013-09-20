@@ -11,7 +11,7 @@ search = (regex, scanner, searcher, doneCallback) ->
   finishedScanning = false
   pathCount = 0
   pathsSearching = 0
-  pathsToSearch = []
+  pathQueue = []
 
   searchPath = (filePath) ->
     pathsSearching++
@@ -21,15 +21,15 @@ search = (regex, scanner, searcher, doneCallback) ->
       checkIfFinished()
 
   searchNextPath = ->
-    if pathsSearching < MAX_CONCURRENT_SEARCH and pathsToSearch.length
-      searchPath(pathsToSearch.pop())
+    if pathsSearching < MAX_CONCURRENT_SEARCH and pathQueue.length
+      searchPath(pathQueue.shift())
 
   maybeSearchPath = (filePath) =>
     pathCount++
     if pathsSearching < MAX_CONCURRENT_SEARCH
       searchPath(filePath)
     else
-      pathsToSearch.push(filePath)
+      pathQueue.push(filePath)
 
   onFinishedScanning = ->
     finishedScanning = true
