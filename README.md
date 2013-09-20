@@ -62,8 +62,22 @@ searcher.searchPaths /text/gi, ['/Some/path', ...], (results) ->
   console.log('Done Searching', results)
 
 # Search a single path
-searcher.searchPath /text/gi, '/Some/path', (results) ->
-  console.log('Done Searching', results)
+searcher.searchPath /text/gi, '/Some/path', (result) ->
+  console.log('Done Searching', result)
+```
+
+Results are in the following format:
+
+```json
+{
+  "path": "/Some/path",
+  "matches": {
+    "matchText": "Text",
+    "lineText": "Text in this file!",
+    "lineNumber": 10,
+    "range": [0, 4]
+  }
+}
 ```
 
 Like the `PathScanner` the searcher keeps no state. You need to consume results via the done callbacks or event.
@@ -76,7 +90,7 @@ A third object, `PathFilter` is available, but intended for use by the `PathScan
 
 ## Using the scanner and searcher together
 
-If you dont want to think about combining the `PathScanner` and `PathSearcher` in your own way, a `search` function provided.
+If you dont want to think about combining the `PathScanner` and `PathSearcher` in your own way, a `search` is function provided.
 
 ```coffeescript
 {search, PathScanner, PathSearcher} = require 'dscan'
