@@ -172,8 +172,8 @@ searchMain = (options) ->
       results = JSON.parse(line)
       if results
         pathCount++
-        resultCount += results.results.length
-        console.log "#{results.results.length} matches in #{results.path}" if options.verbose
+        resultCount += results.matches.length
+        console.log "#{results.matches.length} matches in #{results.path}" if options.verbose
 
     maybeEnd()
 

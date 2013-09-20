@@ -21,20 +21,20 @@ class PathSearcher extends EventEmitter
         doneCallback(results) if ++searches == paths.length
 
   searchPath: (regex, path, doneCallback) ->
-    results = null
+    matches = null
 
     readFile path, (lines, lineNumber) =>
       for line in lines
-        matches = @searchLine(regex, line, lineNumber)
+        lineMatches = @searchLine(regex, line, lineNumber)
 
-        if matches?
-          results ?= []
-          results.push(match) for match in matches
+        if lineMatches?
+          matches ?= []
+          matches.push(match) for match in lineMatches
 
         lineNumber++
 
-    if results?.length
-      output = {path, results}
+    if matches?.length
+      output = {path, matches}
       @emit('results-found', output)
 
     doneCallback(output)

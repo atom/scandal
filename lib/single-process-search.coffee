@@ -64,10 +64,10 @@ searchMain = (options) ->
     count++
     console.log results.path if options.verbose
 
-    for result in results.results
+    for match in results.matches
       resultCount++
       if options.verbose
-        console.log '  ', result.lineNumber + ":", result.matchText, 'at', result.range
+        console.log '  ', match.lineNumber + ":", match.matchText, 'at', match.range
 
   search new RegExp(options.search, 'gi'), scanner, searcher, ->
     console.timeEnd 'Single Process Search'

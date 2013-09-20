@@ -75,12 +75,12 @@ describe "PathSearcher", ->
 
         results = resultsHandler.mostRecentCall.args[0]
         expect(results.path).toBe filePath
-        expect(results.results.length).toBe 6
+        expect(results.matches.length).toBe 6
 
-        expect(results.results[0].lineText).toBe '  var sort = function(items) {'
-        expect(results.results[0].lineNumber).toBe 2
-        expect(results.results[0].matchText).toBe 'items'
-        expect(results.results[0].range).toEqual [22, 27]
+        expect(results.matches[0].lineText).toBe '  var sort = function(items) {'
+        expect(results.matches[0].lineNumber).toBe 2
+        expect(results.matches[0].matchText).toBe 'items'
+        expect(results.matches[0].range).toEqual [22, 27]
 
   describe "searchPaths()", ->
     filePaths = null
