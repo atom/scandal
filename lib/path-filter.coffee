@@ -8,13 +8,13 @@ class PathFilter
   @escapeRegExp: (str) ->
     str.replace(/([\/'*+?|()\[\]{}.\^$])/g, '\\$1')
 
-  constructor: (rootPath, {inclusions, exclusions, showHidden, excludeVcsIgnores}={}) ->
+  constructor: (rootPath, {inclusions, exclusions, includeHidden, excludeVcsIgnores}={}) ->
     @inclusions = @createMatchers(inclusions)
     @exclusions = @createMatchers(exclusions)
 
     @repo = GitUtils.open(rootPath) if excludeVcsIgnores
 
-    @excludeHidden() if showHidden != true
+    @excludeHidden() if includeHidden != true
 
   isFileAccepted: (filepath) ->
     @isPathAccepted('directory', filepath) and @isPathAccepted('file', filepath)
