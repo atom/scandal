@@ -166,36 +166,28 @@ multiProcessSearch = ->
   searcher = new PathSearcher()
   regex = new RegExp(options.search, 'gi')
 
-  offset = 0
-  # This is terrible and unreliable and sometimes infinite loops. From:
-  # https://github.com/substack/stream-handbook#consuming-a-readable-stream
-  readLine = (stdin) ->
+  soFar = ''
+  readLines = (stdin) ->
     buf = stdin.read()
     return null unless buf
 
-    while offset < buf.length
-      if buf[offset] == 0x0a
-        data = buf.slice(0, offset).toString()
-        buf = buf.slice(offset + 1)
-        offset = 0
-        stdin.unshift(buf)
-        return data
-      offset++
-
-    stdin.unshift(buf);
-    null
+    # Lifted from https://github.com/dominictarr/split/blob/master/index.js
+    pieces = (soFar + buf).split('\n')
+    soFar = pieces.pop()
+    pieces
 
   process.stdin.on 'readable', ->
-    data = readLine(process.stdin)
-    return unless data
+    lines = readLines(process.stdin)
+    return unless lines
 
-    emitStart()
-    if data[0] == STOP_CHAR
-      emitEnd()
-    else
-      paths = JSON.parse(data)
-      searcher.searchPaths regex, paths, (results) ->
-        emitResults(results)
+    for line in lines
+      emitStart()
+      if !line or line[0] == STOP_CHAR
+        emitEnd()
+      else
+        paths = JSON.parse(line)
+        searcher.searchPaths regex, paths, (results) ->
+          emitResults(results)
 
 multiProcessSearchMain = (options) ->
   options.pathToScan = path.resolve(options.pathToScan)
@@ -234,10 +226,10 @@ multiProcessSearchMain = (options) ->
 
   searchProcess.stdout.pipe(split()).on 'data', (line) ->
     if line[0] == START_CHAR
-      console.log "search start"
+      console.log "search start" if options.verbose
     else if line[0] == END_CHAR
       searches--
-      console.log "search end #{searches}"
+      console.log "search end #{searches}" if options.verbose
     else if line and line.length
       try
         results = JSON.parse(line)
@@ -246,7 +238,7 @@ multiProcessSearchMain = (options) ->
       if results
         pathCount++
         resultCount += results.results.length
-        console.log "#{results.results.length} matches in #{results.path}"
+        console.log "#{results.results.length} matches in #{results.path}" if options.verbose
 
     maybeEnd()
 
