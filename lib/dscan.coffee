@@ -260,7 +260,7 @@ buildRegex = (pattern) ->
 
 main = ->
   argParser = new ArgumentParser
-    version: '0.0.1'
+    version: require('../package.json').version
     addHelp: true
     description: 'Search a directory for something'
 
