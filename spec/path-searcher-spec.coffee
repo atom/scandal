@@ -77,7 +77,7 @@ describe "PathSearcher", ->
 
         expect(results.matches[0].lineText).toBe '  var sort = function(items) {'
         expect(results.matches[0].matchText).toBe 'items'
-        expect(results.matches[0].range).toEqual [[2, 22], [2, 27]]
+        expect(results.matches[0].range).toEqual [[1, 22], [1, 27]]
 
   describe "searchPaths()", ->
     filePaths = null

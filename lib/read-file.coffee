@@ -12,7 +12,7 @@ chunkedBuffer = null
 
 readFile = (path, callback) ->
   chunkSize = readFile.CHUNK_SIZE
-  line = 1
+  line = 0
   fd = fs.openSync(path, "r")
   try
     offset = 0
