@@ -13,6 +13,14 @@ search = (regex, scanner, searcher, doneCallback) ->
   pathsSearching = 0
   pathQueue = []
 
+  globalizeRegex = (regex) ->
+    if not regex.global
+      flags = "g"
+      flags += "i" if regex.ignoreCase
+      flags += "m" if regex.multiline
+      regex = new RegExp(regex.source, flags)
+    regex
+
   searchPath = (filePath) ->
     pathsSearching++
     searcher.searchPath regex, filePath, ->
@@ -44,6 +52,7 @@ search = (regex, scanner, searcher, doneCallback) ->
     scanner.removeListener 'finished-scanning', onFinishedScanning
     doneCallback()
 
+  regex = globalizeRegex(regex)
   scanner.on 'path-found', maybeSearchPath
   scanner.on 'finished-scanning', onFinishedScanning
   scanner.scan()
