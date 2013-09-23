@@ -25,24 +25,22 @@ describe "PathSearcher", ->
       expect(matches.length).toBe 2
 
       expect(matches[0].lineText).toBe line
-      expect(matches[0].lineNumber).toBe 10
       expect(matches[0].matchText).toBe 'items'
-      expect(matches[0].range).toEqual [15, 20]
+      expect(matches[0].range).toEqual [[10, 15], [10, 20]]
 
       expect(matches[1].lineText).toBe line
-      expect(matches[1].lineNumber).toBe 10
       expect(matches[1].matchText).toBe 'itemmmms'
-      expect(matches[1].range).toEqual [25, 33]
+      expect(matches[1].range).toEqual [[10, 25], [10, 33]]
 
     it "resets the regex between lines", ->
-      matches = searcher.searchLine(regex, 'has items and items!')
+      matches = searcher.searchLine(regex, 'has items and items!', 0)
       expect(matches.length).toBe 2
-      expect(matches[0].range).toEqual [4, 9]
-      expect(matches[1].range).toEqual [14, 19]
+      expect(matches[0].range).toEqual [[0, 4], [0, 9]]
+      expect(matches[1].range).toEqual [[0, 14], [0, 19]]
 
-      matches = searcher.searchLine(regex, 'another with itemmms!')
+      matches = searcher.searchLine(regex, 'another with itemmms!', 0)
       expect(matches.length).toBe 1
-      expect(matches[0].range).toEqual [13, 20]
+      expect(matches[0].range).toEqual [[0, 13], [0, 20]]
 
       matches = searcher.searchLine(regex, 'nothing here')
       expect(matches).toBe null
@@ -78,9 +76,8 @@ describe "PathSearcher", ->
         expect(results.matches.length).toBe 6
 
         expect(results.matches[0].lineText).toBe '  var sort = function(items) {'
-        expect(results.matches[0].lineNumber).toBe 2
         expect(results.matches[0].matchText).toBe 'items'
-        expect(results.matches[0].range).toEqual [22, 27]
+        expect(results.matches[0].range).toEqual [[2, 22], [2, 27]]
 
   describe "searchPaths()", ->
     filePaths = null

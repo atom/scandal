@@ -47,8 +47,7 @@ class PathSearcher extends EventEmitter
       matches.push
         matchText: RegExp.lastMatch
         lineText: line.substr(0,100)
-        lineNumber: lineNumber
-        range: [regex.lastIndex - RegExp.lastMatch.length, regex.lastIndex]
+        range: [[lineNumber, regex.lastIndex - RegExp.lastMatch.length], [lineNumber, regex.lastIndex]]
 
     regex.lastIndex = 0
     matches
