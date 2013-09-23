@@ -74,6 +74,7 @@ describe "PathScanner", ->
     beforeEach ->
       rootPath = fs.realpathSync("spec/fixtures/git")
       fs.rename(path.join(rootPath, 'git.git'), path.join(rootPath, '.git'))
+      fs.writeFileSync(path.join(rootPath, 'ignored.txt'), "This must be added in the spec because the file can't be checked in!")
 
     afterEach ->
       fs.rename(path.join(rootPath, '.git'), path.join(rootPath, 'git.git'))
@@ -93,8 +94,8 @@ describe "PathScanner", ->
         expect(paths.length).toBe 2
         expect(paths).not.toContain path.join(rootPath, 'ignored.txt')
 
-    it "includes files specified with .gitignore with excludeVcsIgnores == false", ->
-      scanner = new PathScanner(rootPath)
+    it "includes files matching .gitignore patterns when excludeVcsIgnores == false", ->
+      scanner = new PathScanner(rootPath, excludeVcsIgnores: false)
       scanner.on('path-found', pathHandler = createPathCollector())
       scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
