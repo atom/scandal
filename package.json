@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "Directory Scan Utilities",
   "main": "./lib/scandal.coffee",
+  "bin": {
+    "scandal": "./bin/scandal"
+  },
   "scripts": {
     "test": "jasmine-focused --captureExceptions --coffee spec"
   },
