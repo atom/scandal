@@ -10,6 +10,19 @@ describe "PathSearcher", ->
     searcher = new PathSearcher()
     rootPath = fs.realpathSync("spec/fixtures/many-files")
 
+  describe "findWordBreak()", ->
+    it "finds the first index", ->
+      expect(searcher.findWordBreak('this is some text', 2, -1)).toBe 0
+
+    it "finds the last index", ->
+      expect(searcher.findWordBreak('text', 2, 1)).toBe 3
+
+    it "finds the end of the word", ->
+      expect(searcher.findWordBreak('text and stuff', 1, 1)).toBe 3
+
+    it "finds the beginning of the word", ->
+      expect(searcher.findWordBreak('text and stuff', 6, -1)).toBe 5
+
   describe "searchLine()", ->
     regex = null
     beforeEach ->
@@ -44,6 +57,25 @@ describe "PathSearcher", ->
 
       matches = searcher.searchLine(regex, 'nothing here')
       expect(matches).toBe null
+
+    describe "with really long lines", ->
+      it "truncates around each match", ->
+        line = "Gentrify ITEMS yr swag salvia mcsweeney's sustainable skateboard hoodie craft beer. Sartorial mixtape marfa trust fund, cliche seitan 3 wolf moon banh mi keffiyeh. Food truck small batch chillwave photo booth blog ethnic, fap +1 american apparel. Portland semiotics post-ironic etsy cliche photo booth. Wolf bicycle rights yr, keffiyeh godard odd future marfa. Yr authentic raw denim, DIY portland photo booth banh ITEMS hoodie before they sold out PBR mumblecore vinyl blog direct trade mixtape. Ethical twee forage vice ethnic beard food truck, organic Austin authentic kale chips ITEMS thundercats."
+        matches = searcher.searchLine(regex, line, 1)
+        expect(matches.length).toBe 3
+
+        # Match at the beginning of the line
+        expect(matches[0].range).toEqual [[1, 9], [1, 14]]
+        expect(matches[0].lineTextOffset).toEqual 0
+        expect(matches[0].lineText).toEqual "Gentrify ITEMS yr swag salvia mcsweeney's sustainable skateboard hoodie craft beer. Sartorial mixtape"
+
+        expect(matches[1].range).toEqual [[1, 415], [1, 420]]
+        expect(matches[1].lineTextOffset).toEqual 364
+        expect(matches[1].lineText).toEqual "authentic raw denim, DIY portland photo booth banh ITEMS hoodie before they sold out PBR mumblecore vinyl"
+
+        expect(matches[2].range).toEqual [[1, 583], [1, 588]]
+        expect(matches[2].lineTextOffset).toEqual 497
+        expect(matches[2].lineText).toEqual "Ethical twee forage vice ethnic beard food truck, organic Austin authentic kale chips ITEMS thundercats."
 
   describe "searchPath()", ->
     filePath = null
