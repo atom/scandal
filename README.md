@@ -1,5 +1,7 @@
 # scandal - Scandalous directory scanning and searching
 
+[![Build Status](https://travis-ci.org/atom/scandal.png)](https://travis-ci.org/atom/scandal)
+
 scandal provides two utilities:
 
 * Scanning a directory for paths matching a set of glob inclusions or exclusions. For example, you want to find a list of paths to search that match a certain pattern, but are not ignored by the `.gitignore`.
