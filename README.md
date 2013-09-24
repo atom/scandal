@@ -108,5 +108,5 @@ name = "Search #{path}"
 console.time name
 console.log name
 search /text/ig, scanner, searcher, ->
- console.timeEnd name
+  console.timeEnd name
 ```
