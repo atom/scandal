@@ -10,7 +10,7 @@ Unsurprisingly, these two things can be combined to scan and search a directory.
 
 ## Goals
 
-It is written to be simple, flexible and efficient. Dscan does the minimum.
+It is written to be simple, flexible and efficient. Scandal does the minimum.
 
 We want to provide modules to combine in any way you'd like. Want to scan in one process and search in another? You can do that.
 
