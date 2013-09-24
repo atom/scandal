@@ -104,7 +104,7 @@ describe "PathSearcher", ->
         expect(resultsHandler.callCount).toBe 1
 
         results = resultsHandler.mostRecentCall.args[0]
-        expect(results.path).toBe filePath
+        expect(results.filePath).toBe filePath
         expect(results.matches.length).toBe 6
 
         expect(results.matches[0].lineText).toBe '  var sort = function(items) {'
@@ -140,8 +140,8 @@ describe "PathSearcher", ->
 
       runs ->
         expect(resultsHandler.callCount).toBe 2
-        expect(resultsHandler.argsForCall[0][0].path).toBe filePaths[0]
-        expect(resultsHandler.argsForCall[1][0].path).toBe filePaths[1]
+        expect(resultsHandler.argsForCall[0][0].filePath).toBe filePaths[0]
+        expect(resultsHandler.argsForCall[1][0].filePath).toBe filePaths[1]
 
         # should have all the results as an arg in the done callback
         results = [

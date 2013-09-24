@@ -25,10 +25,10 @@ class PathSearcher extends EventEmitter
 
         doneCallback(results) if ++searches == paths.length
 
-  searchPath: (regex, path, doneCallback) ->
+  searchPath: (regex, filePath, doneCallback) ->
     matches = null
 
-    readFile path, (lines, lineNumber) =>
+    readFile filePath, (lines, lineNumber) =>
       for line in lines
         lineMatches = @searchLine(regex, line, lineNumber)
 
@@ -39,7 +39,7 @@ class PathSearcher extends EventEmitter
         lineNumber++
 
     if matches?.length
-      output = {path, matches}
+      output = {filePath, matches}
       @emit('results-found', output)
 
     doneCallback(output)
