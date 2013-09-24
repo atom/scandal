@@ -96,3 +96,4 @@ class PathSearcher extends EventEmitter
 
     return 0 if i < 0
     return maxIndex if i > maxIndex
+    i
