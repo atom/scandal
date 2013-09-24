@@ -58,16 +58,25 @@ class PathSearcher extends EventEmitter
       if lineTextLength < @maxLineLength
         lineText = line
       else
+        # TODO: I want to break this into a function, but it needs to return the
+        # new text and an offset, or an offset and a length. I am worried about
+        # speed and creating a bunch of arrays just for returning from this
+        # proposed function.
+
+        # Find the line context around the match
         lineTextOffset = Math.round(matchIndex - (@maxLineLength - matchLength) / 2)
         lineTextEndOffset = lineTextOffset + @maxLineLength
 
         if lineTextOffset <= 0
+          # The match is near the beginning of the line, so we expand the right
           lineTextOffset = 0
           lineTextEndOffset = @maxLineLength
         else if lineTextEndOffset > lineTextLength - 2
+          # The match is near the end of the line, so we expand to the left
           lineTextEndOffset = lineTextLength - 1
           lineTextOffset = lineTextEndOffset - @maxLineLength
 
+        # We dont want the line to break a word, so find the boundaries
         lineTextOffset = @findWordBreak(line, lineTextOffset, -1)
         lineTextEndOffset = @findWordBreak(line, lineTextEndOffset, 1) + 1
 
