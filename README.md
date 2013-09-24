@@ -68,7 +68,7 @@ searcher.searchPath /text/gi, '/Some/path', (result) ->
   console.log('Done Searching', result)
 ```
 
-Results are in the following format:
+Results from line 10 (1 based) are in the following format.
 
 ```json
 {
@@ -76,8 +76,8 @@ Results are in the following format:
   "matches": {
     "matchText": "Text",
     "lineText": "Text in this file!",
-    "lineNumber": 10,
-    "range": [0, 4]
+    "lineTextOffset": 0,
+    "range": [[9, 0], [9, 4]]
   }
 }
 ```
