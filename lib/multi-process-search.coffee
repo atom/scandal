@@ -42,7 +42,7 @@ kill = (childProcess) ->
 # Scan and emit jsonified list of paths on stdout. Each line is a list.
 # \0\n inidicates that it's done.
 scan = ->
-  require("coffee-script");
+  require("coffee-script")
   PathScanner = require './path-scanner.coffee'
 
   PATHS_TO_SEARCH = 50
@@ -82,7 +82,7 @@ scan = ->
 # This thing never knows when it is completely done. You can just keep sending
 # it lists of paths to search.
 search = ->
-  require("coffee-script");
+  require("coffee-script")
   PathSearcher = require './path-searcher.coffee'
 
   searches = 0
@@ -151,7 +151,7 @@ searchMain = (options) ->
   scanProcess = fork(scanTask, env)
   searchProcess = fork(searchTask, env)
 
-  searchProcess.stdin.setEncoding = 'utf-8';
+  searchProcess.stdin.setEncoding = 'utf-8'
   scanProcess.stdout.pipe(split()).on 'data', (data) ->
     if data[0] == STOP_CHAR
       scanFinished = true
