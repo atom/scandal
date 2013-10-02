@@ -28,6 +28,6 @@
     "split": "~0.2"
   },
   "devDependencies": {
-    "jasmine-focused": "~0.12.0"
+    "jasmine-focused": "~0.14.0"
   }
 }
