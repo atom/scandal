@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>scandal by atom</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>scandal</h1>
+        <p>Efficient directory scan + search utilities</p>
+
+        <p class="view"><a href="https://github.com/atom/scandal">View the Project on GitHub <small>atom/scandal</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/atom/scandal/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/atom/scandal/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/atom/scandal">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="scandal---scandalous-directory-scanning-and-searching" class="anchor" href="#scandal---scandalous-directory-scanning-and-searching"><span class="octicon octicon-link"></span></a>scandal - Scandalous directory scanning and searching</h1>
+
+<p><a href="https://travis-ci.org/atom/scandal"><img src="https://travis-ci.org/atom/scandal.png" alt="Build Status"></a></p>
+
+<p>scandal provides two utilities:</p>
+
+<ul>
+<li><p>Scanning a directory for paths matching a set of glob inclusions or exclusions. For example, you want to find a list of paths to search that match a certain pattern, but are not ignored by the <code>.gitignore</code>.</p></li>
+<li><p>Searching a list of paths for a regex. For example, you have a list of paths, you want to find all instances of <code>/text/gi</code>.</p></li>
+</ul><p>Unsurprisingly, these two things can be combined to scan and search a directory.</p>
+
+<h2>
+<a name="goals" class="anchor" href="#goals"><span class="octicon octicon-link"></span></a>Goals</h2>
+
+<p>It is written to be simple, flexible and efficient. Scandal does the minimum.</p>
+
+<p>We want to provide modules to combine in any way you'd like. Want to scan in one process and search in another? You can do that.</p>
+
+<p>To be clear, scandal is not a CLI. It can be used from the terminal, but in practice it's only used for benchmarking.</p>
+
+<h2>
+<a name="objects" class="anchor" href="#objects"><span class="octicon octicon-link"></span></a>Objects</h2>
+
+<p>scandal provides two main modules: <code>PathScanner</code> and <code>PathSearcher</code>.</p>
+
+<h3>
+<a name="pathscanner" class="anchor" href="#pathscanner"><span class="octicon octicon-link"></span></a>PathScanner</h3>
+
+<p>Usage is simple:</p>
+
+<div class="highlight highlight-coffeescript"><pre><span class="p">{</span><span class="nx">PathScanner</span><span class="p">}</span> <span class="o">=</span> <span class="nx">require</span> <span class="s">'scandal'</span>
+<span class="nv">scanner = </span><span class="k">new</span> <span class="nx">PathScanner</span><span class="p">(</span><span class="s">'/Users/me/myDopeProject'</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span>
+
+<span class="nx">scanner</span><span class="p">.</span><span class="nx">on</span> <span class="s">'path-found'</span><span class="p">,</span> <span class="nf">(path) -&gt;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">path</span><span class="p">)</span>
+
+<span class="nx">scanner</span><span class="p">.</span><span class="nx">on</span> <span class="s">'finished-scanning'</span><span class="p">,</span> <span class="nf">-&gt;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s">'All done!'</span><span class="p">)</span>
+
+<span class="nx">scanner</span><span class="p">.</span><span class="nx">scan</span><span class="p">()</span>
+</pre></div>
+
+<p><code>PathScanner</code> keeps no state. You must consume paths via the 'path-found' event.</p>
+
+<h4>
+<a name="options" class="anchor" href="#options"><span class="octicon octicon-link"></span></a>options</h4>
+
+<ul>
+<li>
+<em>excludeVcsIgnores</em> - bool; default false; true to exclude paths defined in a .gitignore. Uses <a href="http://atom.github.io/node-git/">git-utils</a> to check ignred files.</li>
+<li>
+<em>inclusions</em> - list of patterns to include. Uses <a href="https://github.com/isaacs/minimatch">minimatch</a> with a couple additions: <code>['dirname']</code> and <code>['dirname/']</code> will match all paths in direcotry <code>dirname</code>
+</li>
+<li>
+<em>exclusions</em> - list of patterns to exclude. Same matcher as <code>inclusions</code>.</li>
+<li>
+<em>includeHidden</em> - bool; default false; true includes hidden files.</li>
+</ul><h3>
+<a name="pathsearcher" class="anchor" href="#pathsearcher"><span class="octicon octicon-link"></span></a>PathSearcher</h3>
+
+<div class="highlight highlight-coffeescript"><pre><span class="p">{</span><span class="nx">PathSearcher</span><span class="p">}</span> <span class="o">=</span> <span class="nx">require</span> <span class="s">'scandal'</span>
+<span class="nv">searcher = </span><span class="k">new</span> <span class="nx">PathSearcher</span><span class="p">()</span>
+
+<span class="c1"># You can subscribe to a `results-found` event</span>
+<span class="nx">searcher</span><span class="p">.</span><span class="nx">on</span> <span class="s">'results-found'</span><span class="p">,</span> <span class="nf">(result) -&gt;</span>
+  <span class="c1"># result will contain all the matches for a single path</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s">"Single Path's Results"</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span>
+
+<span class="c1"># Search a list of paths</span>
+<span class="nx">searcher</span><span class="p">.</span><span class="nx">searchPaths</span> <span class="sr">/text/gi</span><span class="p">,</span> <span class="p">[</span><span class="s">'/Some/path'</span><span class="p">,</span> <span class="p">...],</span> <span class="nf">(results) -&gt;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s">'Done Searching'</span><span class="p">,</span> <span class="nx">results</span><span class="p">)</span>
+
+<span class="c1"># Search a single path</span>
+<span class="nx">searcher</span><span class="p">.</span><span class="nx">searchPath</span> <span class="sr">/text/gi</span><span class="p">,</span> <span class="s">'/Some/path'</span><span class="p">,</span> <span class="nf">(result) -&gt;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s">'Done Searching'</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span>
+</pre></div>
+
+<p>Results from line 10 (1 based) are in the following format.</p>
+
+<div class="highlight highlight-json"><pre><span class="p">{</span>
+  <span class="nt">"path"</span><span class="p">:</span> <span class="s2">"/Some/path"</span><span class="p">,</span>
+  <span class="nt">"matches"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">"matchText"</span><span class="p">:</span> <span class="s2">"Text"</span><span class="p">,</span>
+    <span class="nt">"lineText"</span><span class="p">:</span> <span class="s2">"Text in this file!"</span><span class="p">,</span>
+    <span class="nt">"lineTextOffset"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="nt">"range"</span><span class="p">:</span> <span class="p">[[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>Like the <code>PathScanner</code> the searcher keeps no state. You need to consume results via the done callbacks or event.</p>
+
+<p>File reading is fast and memory efficient. It reads in 10k chunks and writes over each previous chunk. Small object creation is kept to a minimum during the read to make light use of the GC.</p>
+
+<h3>
+<a name="pathfilter" class="anchor" href="#pathfilter"><span class="octicon octicon-link"></span></a>PathFilter</h3>
+
+<p>A third object, <code>PathFilter</code> is available, but intended for use by the <code>PathScanner</code>.</p>
+
+<h2>
+<a name="using-the-scanner-and-searcher-together" class="anchor" href="#using-the-scanner-and-searcher-together"><span class="octicon octicon-link"></span></a>Using the scanner and searcher together</h2>
+
+<p>If you dont want to think about combining the <code>PathScanner</code> and <code>PathSearcher</code> in your own way, a <code>search</code> is function provided.</p>
+
+<div class="highlight highlight-coffeescript"><pre><span class="p">{</span><span class="nx">search</span><span class="p">,</span> <span class="nx">PathScanner</span><span class="p">,</span> <span class="nx">PathSearcher</span><span class="p">}</span> <span class="o">=</span> <span class="nx">require</span> <span class="s">'scandal'</span>
+
+<span class="nv">path = </span><span class="s">'/path/to/search'</span>
+<span class="nv">scanner = </span><span class="k">new</span> <span class="nx">PathScanner</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nv">excludeVcsIgnores: </span><span class="kc">true</span><span class="p">)</span>
+<span class="nv">searcher = </span><span class="k">new</span> <span class="nx">PathSearcher</span><span class="p">()</span>
+
+<span class="nx">searcher</span><span class="p">.</span><span class="nx">on</span> <span class="s">'results-found'</span> <span class="nf">(result) -&gt;</span>
+  <span class="c1"># do something rad with the result!</span>
+
+<span class="nv">name = </span><span class="s">"Search </span><span class="si">#{</span><span class="nx">path</span><span class="si">}</span><span class="s">"</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">time</span> <span class="nx">name</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">name</span>
+<span class="nx">search</span> <span class="sr">/text/ig</span><span class="p">,</span> <span class="nx">scanner</span><span class="p">,</span> <span class="nx">searcher</span><span class="p">,</span> <span class="nf">-&gt;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">timeEnd</span> <span class="nx">name</span>
+</pre></div>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/atom">atom</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
