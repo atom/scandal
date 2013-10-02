@@ -1,6 +1,6 @@
 fs = require 'fs'
 path = require 'path'
-PathScanner = require '../lib/path-scanner'
+PathScanner = require '../src/path-scanner'
 
 describe "PathScanner", ->
   rootPath = null

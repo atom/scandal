@@ -1,7 +1,7 @@
 fs = require 'fs'
 path = require 'path'
-PathSearcher = require '../lib/path-searcher'
-PathScanner = require '../lib/path-scanner'
+PathSearcher = require '../src/path-searcher'
+PathScanner = require '../src/path-scanner'
 
 describe "PathSearcher", ->
   [searcher, rootPath] = []

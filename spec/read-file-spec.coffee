@@ -1,6 +1,6 @@
 fs = require 'fs'
 path = require 'path'
-readFile = require '../lib/read-file'
+readFile = require '../src/read-file'
 
 describe "readFile", ->
   [rootPath, chunkSize] = []
