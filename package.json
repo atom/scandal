@@ -17,6 +17,7 @@
   "bugs": {
     "url": "https://github.com/atom/scandal/issues"
   },
+  "homepage": "http://atom.github.io/scandal",
   "dependencies": {
     "underscore": "~1.5.1",
     "coffee-script": "~1.6.3",
