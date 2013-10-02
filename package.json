@@ -24,7 +24,7 @@
     "minimatch": "0.2.11",
     "git-utils": "~0.25.0",
     "argparse": "~0.1",
-    "isbinaryfile": "",
+    "isbinaryfile": "~0.1.9",
     "split": "~0.2"
   },
   "devDependencies": {
