@@ -14,7 +14,12 @@
     "type": "git",
     "url": "https://github.com/atom/scandal.git"
   },
-  "license": "MIT",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://github.com/atom/scandal/raw/master/LICENSE.md"
+    }
+  ],
   "bugs": {
     "url": "https://github.com/atom/scandal/issues"
   },
