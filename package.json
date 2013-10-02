@@ -21,7 +21,7 @@
     "underscore": "~1.5.1",
     "coffee-script": "~1.6.3",
     "minimatch": "0.2.11",
-    "git-utils": "0.24.0",
+    "git-utils": "~0.25.0",
     "argparse": "~0.1",
     "isbinaryfile": "",
     "split": "~0.2"
