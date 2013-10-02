@@ -1,3 +1,2 @@
 #!/usr/bin/env node
-require("coffee-script");
-require("../lib/scandal.coffee").main();
+require("../lib/scandal.js").main();
