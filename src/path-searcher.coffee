@@ -51,7 +51,8 @@ class PathSearcher extends EventEmitter
     while(regex.test(line))
       lineTextOffset = 0
       lineTextLength = line.length
-      matchLength = RegExp.lastMatch.length
+      matchText = RegExp.lastMatch
+      matchLength = matchText.length
       matchIndex = regex.lastIndex - matchLength
       matchEndIndex = regex.lastIndex
 
@@ -85,7 +86,7 @@ class PathSearcher extends EventEmitter
 
       matches ?= []
       matches.push
-        matchText: RegExp.lastMatch
+        matchText: matchText
         lineText: lineText
         lineTextOffset: lineTextOffset
         range: [[lineNumber, matchIndex], [lineNumber, matchEndIndex]]

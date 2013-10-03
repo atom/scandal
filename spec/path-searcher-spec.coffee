@@ -68,14 +68,17 @@ describe "PathSearcher", ->
         expect(matches[0].range).toEqual [[1, 9], [1, 14]]
         expect(matches[0].lineTextOffset).toEqual 0
         expect(matches[0].lineText).toEqual "Gentrify ITEMS yr swag salvia mcsweeney's sustainable skateboard hoodie craft beer. Sartorial mixtape"
+        expect(matches[0].matchText).toEqual 'ITEMS'
 
         expect(matches[1].range).toEqual [[1, 415], [1, 420]]
         expect(matches[1].lineTextOffset).toEqual 364
         expect(matches[1].lineText).toEqual "authentic raw denim, DIY portland photo booth banh ITEMS hoodie before they sold out PBR mumblecore vinyl"
+        expect(matches[1].matchText).toEqual 'ITEMS'
 
         expect(matches[2].range).toEqual [[1, 583], [1, 588]]
         expect(matches[2].lineTextOffset).toEqual 497
         expect(matches[2].lineText).toEqual "Ethical twee forage vice ethnic beard food truck, organic Austin authentic kale chips ITEMS thundercats."
+        expect(matches[2].matchText).toEqual 'ITEMS'
 
   describe "searchPath()", ->
     filePath = null
