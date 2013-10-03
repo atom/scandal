@@ -71,12 +71,12 @@ searchMain = (options) ->
 
   searcher.on 'results-found', (results) ->
     count++
-    console.log results.path if options.verbose
+    console.log results.filePath if options.verbose
 
     for match in results.matches
       resultCount++
       if options.verbose
-        console.log '  ', match.lineNumber + ":", match.matchText, 'at', match.range
+        console.log '  ', match.range[0][0] + ":", match.matchText, 'at', match.range
 
   search new RegExp(options.search, 'gi'), scanner, searcher, ->
     console.timeEnd 'Single Process Search'
