@@ -82,8 +82,11 @@ class PathFilter
       continue if (pattern.length == 0 || pattern[0] == '#')
 
       if (/\/$|\/\*$/.test(pattern))
+        # Is a dir if it ends in a '/' or '/*'
         addDirectoryMatcher(matchers, pattern)
-      else if (pattern.indexOf('.') < 0 && pattern.indexOf('*') < 0)
+      else if (pattern.indexOf('.') < 1 && pattern.indexOf('*') < 0)
+        # If no extension and no '*', assume it's a dir.
+        # Also assumes hidden patterns like '.git' are directories.
         addDirectoryMatcher(matchers, pattern + '/*')
       else
         addFileMatcher(matchers, pattern)

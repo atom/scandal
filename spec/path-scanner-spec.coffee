@@ -123,3 +123,31 @@ describe "PathScanner", ->
       runs ->
         expect(paths.length).toBe 3
         expect(paths).toContain path.join(rootPath, '.gitignore')
+
+    it "treats hidden file patterns as directories and wont search in hidden directories", ->
+      scanner = new PathScanner(rootPath, exclusions: ['.git'], excludeVcsIgnores: false, includeHidden: true)
+      scanner.on('path-found', pathHandler = createPathCollector())
+      scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+      runs ->
+        scanner.scan()
+
+      waitsFor ->
+        finishedHandler.callCount > 0
+
+      runs ->
+        expect(paths).not.toContain path.join(rootPath, '.git/HEAD')
+
+    it "can ignore hidden files even though it is treated as a directory", ->
+      scanner = new PathScanner(rootPath, exclusions: ['.gitignore'], excludeVcsIgnores: false, includeHidden: true)
+      scanner.on('path-found', pathHandler = createPathCollector())
+      scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+      runs ->
+        scanner.scan()
+
+      waitsFor ->
+        finishedHandler.callCount > 0
+
+      runs ->
+        expect(paths).not.toContain path.join(rootPath, '.gitignore')
