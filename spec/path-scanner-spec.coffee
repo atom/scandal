@@ -53,6 +53,20 @@ describe "PathScanner", ->
           expect(paths).toContain path.join(rootPath, 'newdir', 'deep_dir.js')
           expect(paths).toContain path.join(rootPath, 'sample.js')
 
+      it "lists only paths specified by a deep dir", ->
+        scanner = new PathScanner(rootPath, inclusions: [path.join('.root', 'subdir')+'/*'], includeHidden: true)
+        scanner.on('path-found', pathHandler = createPathCollector())
+        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+        runs ->
+          scanner.scan()
+
+        waitsFor ->
+          finishedHandler.callCount > 0
+
+        runs ->
+          expect(paths).toContain path.join(rootPath, '.root', 'subdir', 'file1.txt')
+
       dirs = ['dir', 'dir/', 'dir/*']
       for dir in dirs
         it "lists only paths specified in #{dir}", ->
