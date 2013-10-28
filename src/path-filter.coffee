@@ -88,7 +88,7 @@ class PathFilter
           deepPath = ''
           for i in [0..lastIndex]
             deepPath = path.join(deepPath, paths[i])
-            addDirectoryMatcher(matchers, path.join(deepPath, '*'))
+            addDirectoryMatcher(matchers, deepPath)
 
       if /\/\*$/.test(pattern)
         addDirectoryMatcher(matchers, pattern.slice(0, pattern.length-2))

@@ -66,6 +66,7 @@ describe "PathScanner", ->
 
         runs ->
           expect(paths).toContain path.join(rootPath, '.root', 'subdir', 'file1.txt')
+          expect(paths).not.toContain path.join(rootPath, '.root', 'file3.txt')
 
       dirs = ['dir', 'dir/', 'dir/*']
       for dir in dirs
