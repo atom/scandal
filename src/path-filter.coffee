@@ -73,8 +73,8 @@ class PathFilter
       #
       # * User specifies 'some/directory/anotherdir/*'
       # * We need to break it up into multiple matchers
-      #   * 'some/*'
-      #   * 'some/directory/*'
+      #   * 'some'
+      #   * 'some/directory'
       #
       # Otherwise, we'll hit the 'some' directory, and if there is no matcher,
       # it'll fail and have no chance at hitting the
