@@ -54,7 +54,7 @@ describe "PathScanner", ->
           expect(paths).toContain path.join(rootPath, 'sample.js')
 
       it "lists only paths specified by a deep dir", ->
-        scanner = new PathScanner(rootPath, inclusions: [path.join('.root', 'subdir')+'/*'], includeHidden: true)
+        scanner = new PathScanner(rootPath, inclusions: [path.join('.root', 'subdir')+'/'], includeHidden: true)
         scanner.on('path-found', pathHandler = createPathCollector())
         scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
@@ -68,22 +68,24 @@ describe "PathScanner", ->
           expect(paths).toContain path.join(rootPath, '.root', 'subdir', 'file1.txt')
           expect(paths).not.toContain path.join(rootPath, '.root', 'file3.txt')
 
-      dirs = ['dir', 'dir/', 'dir/*']
+      dirs = ['dir', 'dir/', 'dir/*', 'dir/**']
       for dir in dirs
-        it "lists only paths specified in #{dir}", ->
-          scanner = new PathScanner(rootPath, inclusions: [dir])
-          scanner.on('path-found', pathHandler = createPathCollector())
-          scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+        ((dir) ->
+          it "lists only paths specified in #{dir}", ->
+            scanner = new PathScanner(rootPath, inclusions: [dir])
+            scanner.on('path-found', pathHandler = createPathCollector())
+            scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
-          runs ->
-            scanner.scan()
+            runs ->
+              scanner.scan()
 
-          waitsFor ->
-            finishedHandler.callCount > 0
+            waitsFor ->
+              finishedHandler.callCount > 0
 
-          runs ->
-            expect(paths.length).toBe 1
-            expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
+            runs ->
+              expect(paths.length).toBe 1
+              expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
+        )(dir)
 
   describe "with a git repo", ->
     beforeEach ->
@@ -121,8 +123,23 @@ describe "PathScanner", ->
         finishedHandler.callCount > 0
 
       runs ->
-        expect(paths.length).toBe 3
+        expect(paths.length).toBe 4
         expect(paths).toContain path.join(rootPath, 'ignored.txt')
+
+    it "includes files deep in an included dir", ->
+      scanner = new PathScanner(rootPath, excludeVcsIgnores: false, inclusions: ['node_modules'])
+      scanner.on('path-found', pathHandler = createPathCollector())
+      scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+      runs ->
+        scanner.scan()
+
+      waitsFor ->
+        finishedHandler.callCount > 0
+
+      runs ->
+        expect(paths.length).toBe 1
+        expect(paths).toContain path.join(rootPath, 'node_modules', 'pkg', 'sample.js')
 
     it "lists hidden files with showHidden == true", ->
       scanner = new PathScanner(rootPath, excludeVcsIgnores: true, includeHidden: true)
