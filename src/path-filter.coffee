@@ -90,10 +90,8 @@ class PathFilter
             deepPath = path.join(deepPath, paths[i])
             addDirectoryMatcher(matchers, deepPath)
 
-      if /\/\*\*$/.test(pattern)
-        addDirectoryMatcher(matchers, pattern.slice(0, pattern.length-3))
-      else if /\/\*$/.test(pattern)
-        addDirectoryMatcher(matchers, pattern.slice(0, pattern.length-2))
+      matchIndex = pattern.search(/\/\*\*$|\/\*$/)
+      addDirectoryMatcher(matchers, pattern.slice(0, matchIndex)) if matchIndex > -1
 
       matchers.directory.push(new Minimatch(pattern, PathFilter.MINIMATCH_OPTIONS))
 
@@ -107,7 +105,7 @@ class PathFilter
       pattern = patterns[r].trim()
       continue if (pattern.length == 0 || pattern[0] == '#')
 
-      if (/\/$|\/\*|\/\**$/.test(pattern))
+      if (/\/$|\/\*$|\/\**$/.test(pattern))
         # Is a dir if it ends in a '/' or '/*'
         addDirectoryMatcher(matchers, pattern, deepMatch)
       else if (pattern.indexOf('.') < 1 && pattern.indexOf('*') < 0)
