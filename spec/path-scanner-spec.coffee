@@ -33,7 +33,7 @@ describe "PathScanner", ->
         finishedHandler.callCount > 0
 
       runs ->
-        expect(paths.length).toBe 13
+        expect(paths.length).toBe 14
         expect(paths).toContain path.join(rootPath, 'file1.txt')
         expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
 
@@ -50,7 +50,7 @@ describe "PathScanner", ->
           finishedHandler.callCount > 0
 
         runs ->
-          expect(paths.length).toBe 2
+          expect(paths.length).toBe 3
           expect(paths).toContain path.join(rootPath, 'newdir', 'deep_dir.js')
           expect(paths).toContain path.join(rootPath, 'sample.js')
 

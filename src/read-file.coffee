@@ -1,5 +1,6 @@
 fs = require("fs")
 isBinaryFile = require("isbinaryfile")
+{Readable} = require 'stream'
 
 lastIndexOf = (buffer, length, char) ->
   i = length
@@ -10,52 +11,52 @@ lastIndexOf = (buffer, length, char) ->
 headerBuffer = new Buffer(256)
 chunkedBuffer = null
 
-readFile = (path, callback) ->
-  chunkSize = readFile.CHUNK_SIZE
-  line = 0
-  fd = fs.openSync(path, "r")
-  try
-    offset = 0
-    remainder = ''
-    return if isBinaryFile(headerBuffer, fs.readSync(fd, headerBuffer, 0, 256))
+module.exports =
+class ChunkedLineReader extends Readable
 
-    chunkedBuffer ?= new Buffer(chunkSize)
-    bytesRead = fs.readSync(fd, chunkedBuffer, 0, chunkSize, 0)
+  @CHUNK_SIZE = 10240
+  constructor: (@filePath) ->
+    super()
 
-    while bytesRead
-      # Scary looking. Uses very few new objects
-      index = lastIndexOf(chunkedBuffer, bytesRead, 10)
-      if index < 0
-        # no newlines here, the whole thing is a remainder
-        newRemainder = chunkedBuffer.toString("utf8", 0, bytesRead)
-        str = null
-        lines = null
-      else if index > -1 and index == bytesRead - 1
-        # the last char is a newline
-        newRemainder = ''
-        str = chunkedBuffer.toString("utf8", 0, bytesRead - 1)
-        lines = str.split('\n')
-      else
-        newRemainder = chunkedBuffer.toString("utf8", index+1, bytesRead)
-        str = chunkedBuffer.toString("utf8", 0, index)
-        lines = str.split('\n')
+  _read: ->
+    try
+      fd = fs.openSync(@filePath, "r")
+      line = 0
+      offset = 0
+      remainder = ''
+      chunkSize = @constructor.CHUNK_SIZE
+      return if isBinaryFile(headerBuffer, fs.readSync(fd, headerBuffer, 0, 256))
 
-      if not lines? or lines.length == 0
-        remainder = remainder + newRemainder
-      else
-        lines[0] = remainder + lines[0] if remainder
-        callback(lines, line)
-        remainder = newRemainder
+      chunkedBuffer ?= new Buffer(chunkSize)
+      bytesRead = fs.readSync(fd, chunkedBuffer, 0, chunkSize, 0)
 
-      line += lines.length if lines?
-      offset += bytesRead
-      bytesRead = fs.readSync(fd, chunkedBuffer, 0, chunkSize, offset)
+      while bytesRead
+        # Scary looking. Uses very few new objects
+        index = lastIndexOf(chunkedBuffer, bytesRead, 10)
+        if index < 0
+          # no newlines here, the whole thing is a remainder
+          newRemainder = chunkedBuffer.toString("utf8", 0, bytesRead)
+          str = null
+        else if index > -1 and index == bytesRead - 1
+          # the last char is a newline
+          newRemainder = ''
+          str = chunkedBuffer.toString("utf8", 0, bytesRead)
+        else
+          newRemainder = chunkedBuffer.toString("utf8", index+1, bytesRead)
+          str = chunkedBuffer.toString("utf8", 0, index+1)
 
-    callback(remainder.split('\n'), line) if remainder
+        if str
+          str = remainder + str if remainder
+          @push(str)
+          remainder = newRemainder
+        else
+          remainder = remainder + newRemainder
 
-  finally
-    fs.closeSync(fd)
+        offset += bytesRead
+        bytesRead = fs.readSync(fd, chunkedBuffer, 0, chunkSize, offset)
 
-readFile.CHUNK_SIZE = 10240
+      @push(remainder) if remainder
 
-module.exports = readFile
+    finally
+      fs.closeSync(fd)
+      @push(null)

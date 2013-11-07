@@ -1,39 +1,80 @@
 fs = require 'fs'
 path = require 'path'
-readFile = require '../src/read-file'
+ChunkedLineReader = require '../src/read-file'
 
-describe "readFile", ->
+describe "ChunkedLineReader", ->
   [rootPath, chunkSize] = []
 
   beforeEach ->
-    chunkSize = readFile.CHUNK_SIZE
-    readFile.CHUNK_SIZE = 10
-    rootPath = fs.realpathSync("spec/fixtures/many-files/sample.js")
+    chunkSize = ChunkedLineReader.CHUNK_SIZE
+    ChunkedLineReader.CHUNK_SIZE = 10
 
   afterEach ->
-    readFile.CHUNK_SIZE = chunkSize
+    ChunkedLineReader.CHUNK_SIZE = chunkSize
 
-  it "works", ->
+  it "works with no newline at the end", ->
+    rootPath = fs.realpathSync("spec/fixtures/many-files/sample.js")
+    reader = new ChunkedLineReader(rootPath)
+    reader.on 'end', endHandler = jasmine.createSpy('end handler')
+
     allLines = []
-    readFile rootPath, (lines, lineNumber) ->
-      allLines = allLines.concat(lines)
+    reader.on 'data', (chunk) ->
+      allLines = allLines.concat(chunk.toString().split('\n'))
 
-    sample = [
-      'var quicksort = function () {'
-      '  var sort = function(items) {'
-      '    if (items.length <= 1) return items;'
-      '    var pivot = items.shift(), current, left = [], right = [];'
-      '    while(items.length > 0) {'
-      '      current = items.shift();'
-      '      current < pivot ? left.push(current) : right.push(current);'
-      '    }'
-      '    return sort(left).concat(pivot).concat(sort(right));'
-      '  };'
-      ''
-      '  return sort(Array.apply(this, arguments));'
-      '};'
-    ]
+    waitsFor ->
+      endHandler.callCount > 0
 
-    expect(allLines.length).toEqual sample.length
-    for line, i in allLines
-      expect(line).toEqual sample[i]
+    runs ->
+      sample = [
+        'var quicksort = function () {'
+        '  var sort = function(items) {'
+        '    if (items.length <= 1) return items;'
+        '    var pivot = items.shift(), current, left = [], right = [];'
+        '    while(items.length > 0) {'
+        '      current = items.shift();'
+        '      current < pivot ? left.push(current) : right.push(current);'
+        '    }'
+        '    return sort(left).concat(pivot).concat(sort(right));'
+        '  };'
+        ''
+        '  return sort(Array.apply(this, arguments));'
+        '};'
+      ]
+
+      expect(allLines.length).toEqual sample.length
+      for line, i in allLines
+        expect(line).toEqual sample[i]
+
+  it "works with newline at the end", ->
+    rootPath = fs.realpathSync("spec/fixtures/many-files/sample-end-newline.js")
+    reader = new ChunkedLineReader(rootPath)
+    reader.on 'end', endHandler = jasmine.createSpy('end handler')
+
+    allLines = []
+    reader.on 'data', (chunk) ->
+      allLines = allLines.concat(chunk.toString().split('\n'))
+
+    waitsFor ->
+      endHandler.callCount > 0
+
+    runs ->
+      sample = [
+        'var quicksort = function () {'
+        '  var sort = function(items) {'
+        '    if (items.length <= 1) return items;'
+        '    var pivot = items.shift(), current, left = [], right = [];'
+        '    while(items.length > 0) {'
+        '      current = items.shift();'
+        '      current < pivot ? left.push(current) : right.push(current);'
+        '    }'
+        '    return sort(left).concat(pivot).concat(sort(right));'
+        '  };'
+        ''
+        '  return sort(Array.apply(this, arguments));'
+        '};'
+        ''
+      ]
+
+      expect(allLines.length).toEqual sample.length
+      for line, i in allLines
+        expect(line).toEqual sample[i]
