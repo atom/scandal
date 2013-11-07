@@ -1,5 +1,6 @@
 fs = require 'fs'
 path = require 'path'
+wrench = require 'wrench'
 PathScanner = require '../src/path-scanner'
 
 describe "PathScanner", ->
@@ -90,11 +91,13 @@ describe "PathScanner", ->
   describe "with a git repo", ->
     beforeEach ->
       rootPath = fs.realpathSync("spec/fixtures/git")
-      fs.rename(path.join(rootPath, 'git.git'), path.join(rootPath, '.git'))
+      wrench.copyDirSyncRecursive(path.join(rootPath, 'git.git'), path.join(rootPath, '.git'))
+      wrench.rmdirSyncRecursive(path.join(rootPath, 'git.git'))
       fs.writeFileSync(path.join(rootPath, 'ignored.txt'), "This must be added in the spec because the file can't be checked in!")
 
     afterEach ->
-      fs.rename(path.join(rootPath, '.git'), path.join(rootPath, 'git.git'))
+      wrench.copyDirSyncRecursive(path.join(rootPath, '.git'), path.join(rootPath, 'git.git'))
+      wrench.rmdirSyncRecursive(path.join(rootPath, '.git'))
 
     it "excludes files specified with .gitignore", ->
       scanner = new PathScanner(rootPath, excludeVcsIgnores: true)
