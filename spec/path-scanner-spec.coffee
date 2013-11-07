@@ -54,6 +54,20 @@ describe "PathScanner", ->
           expect(paths).toContain path.join(rootPath, 'newdir', 'deep_dir.js')
           expect(paths).toContain path.join(rootPath, 'sample.js')
 
+      it "explicit inclusions override exclusions", ->
+        scanner = new PathScanner(rootPath, inclusions: ['dir'], exclusions: ['dir'])
+        scanner.on('path-found', pathHandler = createPathCollector())
+        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+        runs ->
+          scanner.scan()
+
+        waitsFor ->
+          finishedHandler.callCount > 0
+
+        runs ->
+          expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
+
       it "lists only paths specified by a deep dir", ->
         scanner = new PathScanner(rootPath, inclusions: [path.join('.root', 'subdir')+'/'], includeHidden: true)
         scanner.on('path-found', pathHandler = createPathCollector())

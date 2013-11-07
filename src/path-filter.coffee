@@ -24,6 +24,8 @@ class PathFilter
     @isPathAccepted('directory', filepath)
 
   isPathAccepted: (fileOrDirectory, filepath) ->
+    # when explicit inclusion, we dont care about the exclusions
+    return true if @inclusions[fileOrDirectory].length and @isPathIncluded(fileOrDirectory, filepath)
     !@isPathIgnored(fileOrDirectory, filepath) && @isPathIncluded(fileOrDirectory, filepath)
 
   isPathIgnored: (fileOrDirectory, filepath) ->
