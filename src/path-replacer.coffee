@@ -25,8 +25,6 @@ class ReplaceTransformer extends Transform
 module.exports =
 class PathReplacer extends EventEmitter
 
-  constructor: ->
-
   replacePaths: (regex, replacementText, paths, doneCallback) ->
     results = null
     pathsReplaced = 0
