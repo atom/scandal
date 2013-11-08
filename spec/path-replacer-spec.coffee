@@ -9,7 +9,7 @@ describe "PathReplacer", ->
     replacer = new PathReplacer()
     rootPath = fs.realpathSync("spec/fixtures/many-files")
 
-  describe "replacePath()", ->
+  describe "replacePaths()", ->
     [filePath, sampleContent] = []
 
     beforeEach ->
@@ -21,7 +21,7 @@ describe "PathReplacer", ->
 
     it "can make a replacement", ->
       replacer.on('path-replaced', resultsHandler = jasmine.createSpy())
-      replacer.replacePath(/items/gi, 'omgwow', filePath, finishedHandler = jasmine.createSpy())
+      replacer.replacePaths(/items/gi, 'omgwow', [filePath], finishedHandler = jasmine.createSpy())
 
       waitsFor ->
         finishedHandler.callCount > 0

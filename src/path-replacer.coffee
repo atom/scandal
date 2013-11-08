@@ -29,8 +29,8 @@ class PathReplacer extends EventEmitter
     pathsReplaced = 0
 
     for filePath in paths
-      @replacePath regex, filePath, (result) ->
-        if pathResult
+      @replacePath regex, replacementText, filePath, (result) ->
+        if result
           results ?= []
           results.push(result)
 
