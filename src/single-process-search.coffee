@@ -85,7 +85,7 @@ searchMain = (options) ->
 
 replaceMain = (options) ->
   scanner = new PathScanner(options.pathToScan, options)
-  replacer = new PathReplacer({dryReplace: true})
+  replacer = new PathReplacer({dryReplace: options.dryReplace})
   regex = new RegExp(options.search, 'gi')
 
   console.time 'Single Process Search + Replace'

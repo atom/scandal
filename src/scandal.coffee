@@ -24,6 +24,7 @@ main = ->
   argParser.addArgument([ '-m', '--multiprocess' ], action: 'storeTrue')
   argParser.addArgument([ '-e', '--excludeVcsIgnores' ], action: 'storeTrue')
   argParser.addArgument([ '-o', '--verbose' ], action: 'storeTrue')
+  argParser.addArgument([ '-d', '--dryReplace' ], action: 'storeTrue')
   argParser.addArgument([ '-s', '--search' ])
   argParser.addArgument([ '-r', '--replace' ])
   argParser.addArgument(['pathToScan'])
