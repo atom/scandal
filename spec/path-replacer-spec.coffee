@@ -30,7 +30,7 @@ describe "PathReplacer", ->
         expect(resultsHandler).toHaveBeenCalled()
         expect(resultsHandler.mostRecentCall.args[0]).toEqual
           filePath: filePath
-          replacements: 7
+          replacements: 6
 
         replacedFile = fs.readFileSync(filePath).toString()
 
@@ -50,3 +50,15 @@ describe "PathReplacer", ->
           };
         '''
         expect(replacedFile).toEqual replacedContent
+
+    it "makes no replacement when nothing to replace", ->
+      replacer.on('path-replaced', resultsHandler = jasmine.createSpy())
+      replacer.replacePaths(/nopenothere/gi, 'omgwow', [filePath], finishedHandler = jasmine.createSpy())
+
+      waitsFor ->
+        finishedHandler.callCount > 0
+
+      runs ->
+        expect(resultsHandler).not.toHaveBeenCalled()
+        replacedFile = fs.readFileSync(filePath).toString()
+        expect(replacedFile).toEqual sampleContent

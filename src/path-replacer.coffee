@@ -9,12 +9,15 @@ ChunkedLineReader = require './chunked-line-reader'
 
 class ReplaceTransformer extends Transform
   constructor: (@regex, @replacementText) ->
-    @matches = []
+    @replacements = 0
     super()
 
   _transform: (chunk, encoding, done) ->
     data = chunk.toString()
-    @matches = @matches.concat(data.match(@regex))
+
+    matches = data.match(@regex)
+    @replacements += matches.length if matches
+
     data = data.replace(@regex, @replacementText)
     @push(data, 'utf8')
     done()
@@ -42,12 +45,12 @@ class PathReplacer extends EventEmitter
     output = temp.createWriteStream()
 
     output.on 'finish', =>
-      replacements = replacer.matches.length
-      result = {filePath, replacements}
-      @emit('path-replaced', result)
+      result = null
+      if replacements = replacer.replacements
+        result = {filePath, replacements}
+        @emit('path-replaced', result)
 
       fs.renameSync(output.path, filePath)
-
       doneCallback(result)
 
     reader.pipe(replacer).pipe(output)
