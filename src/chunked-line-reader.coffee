@@ -18,6 +18,12 @@ class ChunkedLineReader extends Readable
   constructor: (@filePath) ->
     super()
 
+  isBinaryFile: ->
+    fd = fs.openSync(@filePath, "r")
+    isBin = isBinaryFile(@constructor.headerBuffer, fs.readSync(fd, @constructor.headerBuffer, 0, 256))
+    fs.closeSync(fd)
+    isBin
+
   _read: ->
     try
       fd = fs.openSync(@filePath, "r")

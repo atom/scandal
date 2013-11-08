@@ -42,6 +42,8 @@ class PathReplacer extends EventEmitter
 
   replacePath: (regex, replacementText, filePath, doneCallback) ->
     reader = new ChunkedLineReader(filePath)
+    return doneCallback(null) if reader.isBinaryFile()
+
     replacer = new ReplaceTransformer(regex, replacementText, {@dryReplace})
     output = temp.createWriteStream()
 
