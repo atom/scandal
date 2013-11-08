@@ -2,11 +2,13 @@ _ = require 'underscore'
 {ArgumentParser} = require 'argparse'
 PathSearcher = require './path-searcher'
 PathScanner = require './path-scanner'
+PathReplacer = require './path-replacer'
 path = require "path"
 
 search = require('./single-process-search').search
 singleProcessScanMain = require('./single-process-search').scanMain
 singleProcessSearchMain = require('./single-process-search').searchMain
+singleProcessReplaceMain = require('./single-process-search').replaceMain
 
 ###
 This CLI is mainly for benchmarking. While there may be useful data output to
@@ -17,17 +19,21 @@ main = ->
   argParser = new ArgumentParser
     version: require('../package.json').version
     addHelp: true
-    description: 'Search a directory for something'
+    description: 'List paths, search, and replace in a directory'
 
   argParser.addArgument([ '-m', '--multiprocess' ], action: 'storeTrue')
   argParser.addArgument([ '-e', '--excludeVcsIgnores' ], action: 'storeTrue')
   argParser.addArgument([ '-o', '--verbose' ], action: 'storeTrue')
+  argParser.addArgument([ '-d', '--dryReplace' ], action: 'storeTrue')
   argParser.addArgument([ '-s', '--search' ])
+  argParser.addArgument([ '-r', '--replace' ])
   argParser.addArgument(['pathToScan'])
 
   options = argParser.parseArgs()
 
-  if options.search
+  if options.search and options.replace
+    singleProcessReplaceMain(options)
+  else if options.search
     if options.multiprocess
       require('./multi-process-search').searchMain(options)
     else
@@ -35,4 +41,4 @@ main = ->
   else
     singleProcessScanMain(options)
 
-module.exports = {main, search, PathSearcher, PathScanner}
+module.exports = {main, search, PathSearcher, PathScanner, PathReplacer}

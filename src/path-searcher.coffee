@@ -1,7 +1,7 @@
 _ = require("underscore")
 fs = require("fs")
 {EventEmitter} = require("events")
-readFile = require("./read-file")
+ChunkedLineReader = require("./chunked-line-reader")
 
 MAX_LINE_LENGTH = 100
 WORD_BREAK_REGEX = /[ \n\t;:?=&\/]/
@@ -27,22 +27,23 @@ class PathSearcher extends EventEmitter
 
   searchPath: (regex, filePath, doneCallback) ->
     matches = null
+    lineNumber = 0
+    reader = new ChunkedLineReader(filePath)
 
-    readFile filePath, (lines, lineNumber) =>
+    reader.on 'end', =>
+      if matches?.length
+        output = {filePath, matches}
+        @emit('results-found', output)
+      doneCallback(output)
+
+    reader.on 'data', (chunk) =>
+      lines = chunk.toString().split('\n')
       for line in lines
-        lineMatches = @searchLine(regex, line, lineNumber)
+        lineMatches = @searchLine(regex, line, lineNumber++)
 
         if lineMatches?
           matches ?= []
           matches.push(match) for match in lineMatches
-
-        lineNumber++
-
-    if matches?.length
-      output = {filePath, matches}
-      @emit('results-found', output)
-
-    doneCallback(output)
 
   searchLine: (regex, line, lineNumber) ->
     matches = null
