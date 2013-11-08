@@ -1,5 +1,6 @@
 PathSearcher = require './path-searcher'
 PathScanner = require './path-scanner'
+PathReplacer = require './path-replacer'
 
 MAX_CONCURRENT_SEARCH = 20
 
@@ -82,6 +83,31 @@ searchMain = (options) ->
     console.timeEnd 'Single Process Search'
     console.log "#{resultCount} matches in #{count} files. Searched #{pathCount} files"
 
+replaceMain = (options) ->
+  scanner = new PathScanner(options.pathToScan, options)
+  replacer = new PathReplacer({dryReplace: true})
+  regex = new RegExp(options.search, 'gi')
+
+  console.time 'Single Process Search + Replace'
+
+  paths = []
+  scanner.on 'path-found', (p) ->
+    paths.push p
+
+  totalReplacements = 0
+  totalFiles = 0
+  replacer.on 'path-replaced', ({filePath, replacements}) ->
+    totalFiles++
+    totalReplacements += replacements
+    console.log('Replaced', replacements, 'in', filePath) if options.verbose
+
+  scanner.on 'finished-scanning', ->
+    replacer.replacePaths regex, options.replace, paths, ->
+      console.timeEnd 'Single Process Search + Replace'
+      console.log "Replaced #{totalReplacements} matches in #{totalFiles} files"
+
+  scanner.scan()
+
 scanMain = (options) ->
   scanner = new PathScanner(options.pathToScan, options)
   console.time 'Single Process Scan'
@@ -97,4 +123,4 @@ scanMain = (options) ->
 
   scanner.scan()
 
-module.exports = {scanMain, searchMain, search}
+module.exports = {scanMain, searchMain, replaceMain, search}

@@ -8,7 +8,7 @@ temp = require 'temp'
 ChunkedLineReader = require './chunked-line-reader'
 
 class ReplaceTransformer extends Transform
-  constructor: (@regex, @replacementText) ->
+  constructor: (@regex, @replacementText, {@dryReplace}) ->
     @replacements = 0
     super()
 
@@ -18,12 +18,15 @@ class ReplaceTransformer extends Transform
     matches = data.match(@regex)
     @replacements += matches.length if matches
 
-    data = data.replace(@regex, @replacementText)
+    data = data.replace(@regex, @replacementText) unless @dryReplace
+
     @push(data, 'utf8')
     done()
 
 module.exports =
 class PathReplacer extends EventEmitter
+
+  constructor: ({@dryReplace}={}) ->
 
   replacePaths: (regex, replacementText, paths, doneCallback) ->
     results = null
@@ -39,7 +42,7 @@ class PathReplacer extends EventEmitter
 
   replacePath: (regex, replacementText, filePath, doneCallback) ->
     reader = new ChunkedLineReader(filePath)
-    replacer = new ReplaceTransformer(regex, replacementText)
+    replacer = new ReplaceTransformer(regex, replacementText, {@dryReplace})
     output = temp.createWriteStream()
 
     output.on 'finish', =>
