@@ -8,13 +8,12 @@ lastIndexOf = (buffer, length, char) ->
     return i if buffer[i] == char
   -1
 
-headerBuffer = new Buffer(256)
-
 module.exports =
 class ChunkedLineReader extends Readable
 
   @CHUNK_SIZE: 10240
   @chunkedBuffer: null
+  @headerBuffer: new Buffer(256)
 
   constructor: (@filePath) ->
     super()
@@ -26,7 +25,7 @@ class ChunkedLineReader extends Readable
       offset = 0
       remainder = ''
       chunkSize = @constructor.CHUNK_SIZE
-      return if isBinaryFile(headerBuffer, fs.readSync(fd, headerBuffer, 0, 256))
+      return if isBinaryFile(@constructor.headerBuffer, fs.readSync(fd, @constructor.headerBuffer, 0, 256))
 
       @constructor.chunkedBuffer ?= new Buffer(chunkSize)
       chunkedBuffer = @constructor.chunkedBuffer
