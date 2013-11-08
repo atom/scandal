@@ -2,6 +2,7 @@ _ = require 'underscore'
 {ArgumentParser} = require 'argparse'
 PathSearcher = require './path-searcher'
 PathScanner = require './path-scanner'
+PathReplacer = require './path-replacer'
 path = require "path"
 
 search = require('./single-process-search').search
@@ -35,4 +36,4 @@ main = ->
   else
     singleProcessScanMain(options)
 
-module.exports = {main, search, PathSearcher, PathScanner}
+module.exports = {main, search, PathSearcher, PathScanner, PathReplacer}
