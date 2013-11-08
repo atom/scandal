@@ -53,7 +53,11 @@ class PathReplacer extends EventEmitter
         result = {filePath, replacements}
         @emit('path-replaced', result)
 
+      tempStat = fs.statSync(output.path)
+      origStat = fs.statSync(filePath)
+      fs.chmodSync(output.path, origStat.mode) if origStat.mode != tempStat.mode
       fs.renameSync(output.path, filePath)
+
       doneCallback(result)
 
     reader.pipe(replacer).pipe(output)
