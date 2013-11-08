@@ -1,6 +1,6 @@
 fs = require 'fs'
 path = require 'path'
-ChunkedLineReader = require '../src/read-file'
+ChunkedLineReader = require '../src/chunked-line-reader'
 
 describe "ChunkedLineReader", ->
   [rootPath, chunkSize] = []
@@ -11,6 +11,7 @@ describe "ChunkedLineReader", ->
 
   afterEach ->
     ChunkedLineReader.CHUNK_SIZE = chunkSize
+    ChunkedLineReader.chunkedBuffer = null
 
   it "works with no newline at the end", ->
     rootPath = fs.realpathSync("spec/fixtures/many-files/sample.js")

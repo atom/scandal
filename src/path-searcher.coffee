@@ -1,7 +1,7 @@
 _ = require("underscore")
 fs = require("fs")
 {EventEmitter} = require("events")
-ChunkedLineReader = require("./read-file")
+ChunkedLineReader = require("./chunked-line-reader")
 
 MAX_LINE_LENGTH = 100
 WORD_BREAK_REGEX = /[ \n\t;:?=&\/]/

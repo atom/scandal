@@ -5,7 +5,7 @@ temp = require 'temp'
 {Transform} = require 'stream'
 {EOL} = require 'os'
 
-ChunkedLineReader = require './read-file'
+ChunkedLineReader = require './chunked-line-reader'
 
 class ReplaceTransformer extends Transform
   constructor: (@regex, @replacementText) ->
