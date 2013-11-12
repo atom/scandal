@@ -1,4 +1,5 @@
 fs = require 'fs'
+os = require 'os'
 path = require 'path'
 PathReplacer = require '../src/path-replacer'
 
@@ -48,7 +49,7 @@ describe "PathReplacer", ->
 
             return sort(Array.apply(this, arguments));
           };
-        '''
+        '''.replace(/\n/g, os.EOL)
         expect(replacedFile).toEqual replacedContent
 
     it "makes no replacement when nothing to replace", ->

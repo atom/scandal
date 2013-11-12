@@ -1,4 +1,5 @@
 fs = require 'fs'
+os = require 'os'
 path = require 'path'
 ChunkedLineReader = require '../src/chunked-line-reader'
 
@@ -20,7 +21,7 @@ describe "ChunkedLineReader", ->
 
     allLines = []
     reader.on 'data', (chunk) ->
-      allLines = allLines.concat(chunk.toString().split('\n'))
+      allLines = allLines.concat(chunk.toString().split(os.EOL))
 
     waitsFor ->
       endHandler.callCount > 0
@@ -53,7 +54,7 @@ describe "ChunkedLineReader", ->
 
     allLines = []
     reader.on 'data', (chunk) ->
-      allLines = allLines.concat(chunk.toString().split('\n'))
+      allLines = allLines.concat(chunk.toString().split(os.EOL))
 
     waitsFor ->
       endHandler.callCount > 0

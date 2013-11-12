@@ -1,10 +1,11 @@
 _ = require("underscore")
 fs = require("fs")
+os = require("os")
 {EventEmitter} = require("events")
 ChunkedLineReader = require("./chunked-line-reader")
 
 MAX_LINE_LENGTH = 100
-WORD_BREAK_REGEX = /[ \n\t;:?=&\/]/
+WORD_BREAK_REGEX = /[ \r\n\t;:?=&\/]/
 
 module.exports =
 class PathSearcher extends EventEmitter
@@ -37,7 +38,7 @@ class PathSearcher extends EventEmitter
       doneCallback(output)
 
     reader.on 'data', (chunk) =>
-      lines = chunk.toString().split('\n')
+      lines = chunk.toString().split(os.EOL)
       for line in lines
         lineMatches = @searchLine(regex, line, lineNumber++)
 

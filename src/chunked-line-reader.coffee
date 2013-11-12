@@ -39,7 +39,9 @@ class ChunkedLineReader extends Readable
 
       while bytesRead
         # Scary looking. Uses very few new objects
-        index = lastIndexOf(chunkedBuffer, bytesRead, 10)
+        char = if process.platform is 'win32' then 13 else 10
+        index = lastIndexOf(chunkedBuffer, bytesRead, char)
+
         if index < 0
           # no newlines here, the whole thing is a remainder
           newRemainder = chunkedBuffer.toString("utf8", 0, bytesRead)

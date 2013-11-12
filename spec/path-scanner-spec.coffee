@@ -33,7 +33,12 @@ describe "PathScanner", ->
         finishedHandler.callCount > 0
 
       runs ->
-        expect(paths.length).toBe 14
+        # symlink-to-file1.txt is a file on windows
+        if process.platform is 'win32'
+          expect(paths.length).toBe 15
+        else
+          expect(paths.length).toBe 14
+
         expect(paths).toContain path.join(rootPath, 'file1.txt')
         expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
 
@@ -69,7 +74,7 @@ describe "PathScanner", ->
           expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
 
       it "lists only paths specified by a deep dir", ->
-        scanner = new PathScanner(rootPath, inclusions: [path.join('.root', 'subdir')+'/'], includeHidden: true)
+        scanner = new PathScanner(rootPath, inclusions: [path.join('.root', 'subdir')+path.sep], includeHidden: true)
         scanner.on('path-found', pathHandler = createPathCollector())
         scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
@@ -83,7 +88,7 @@ describe "PathScanner", ->
           expect(paths).toContain path.join(rootPath, '.root', 'subdir', 'file1.txt')
           expect(paths).not.toContain path.join(rootPath, '.root', 'file3.txt')
 
-      dirs = ['dir', 'dir/', 'dir/*', 'dir/**']
+      dirs = ['dir', "dir#{path.sep}", "dir#{path.sep}*", "dir#{path.sep}**"]
       for dir in dirs
         ((dir) ->
           it "lists only paths specified in #{dir}", ->
