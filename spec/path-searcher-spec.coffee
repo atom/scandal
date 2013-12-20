@@ -124,7 +124,8 @@ describe "PathSearcher", ->
         path.join(rootPath, 'other.txt')
       ]
 
-    it "does not call results-found when there are no results found", ->
+    it "emits results-not-found when there are no results found", ->
+      searcher.on('results-not-found', noResultsHandler = jasmine.createSpy())
       searcher.on('results-found', resultsHandler = jasmine.createSpy())
       searcher.searchPaths(/nounicorns/gi, filePaths, finishedHandler = jasmine.createSpy())
 
@@ -133,8 +134,12 @@ describe "PathSearcher", ->
 
       runs ->
         expect(resultsHandler).not.toHaveBeenCalled()
+        expect(noResultsHandler.callCount).toBe 2
+        expect(noResultsHandler.argsForCall[0][0]).toBe filePaths[0]
+        expect(noResultsHandler.argsForCall[1][0]).toBe filePaths[1]
 
     it "emits results-found event for multiple paths when there are results found", ->
+      searcher.on('results-not-found', noResultsHandler = jasmine.createSpy())
       searcher.on('results-found', resultsHandler = jasmine.createSpy())
       searcher.searchPaths(/text/gi, filePaths, finishedHandler = jasmine.createSpy())
 
@@ -142,6 +147,7 @@ describe "PathSearcher", ->
         finishedHandler.callCount > 0
 
       runs ->
+        expect(noResultsHandler).not.toHaveBeenCalled()
         expect(resultsHandler.callCount).toBe 2
         expect(resultsHandler.argsForCall[0][0].filePath).toBe filePaths[0]
         expect(resultsHandler.argsForCall[1][0].filePath).toBe filePaths[1]

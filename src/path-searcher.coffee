@@ -35,6 +35,8 @@ class PathSearcher extends EventEmitter
       if matches?.length
         output = {filePath, matches}
         @emit('results-found', output)
+      else
+        @emit('results-not-found', filePath)
       doneCallback(output)
 
     reader.on 'data', (chunk) =>
