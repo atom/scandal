@@ -8,6 +8,16 @@ lastIndexOf = (buffer, length, char) ->
     return i if buffer[i] == char
   -1
 
+# Will ensure data will be read on a line boundary. So this will always do the
+# right thing:
+#
+#   lines = []
+#   reader = new ChunkedLineReader('some/file.txt')
+#   reader.on 'data', (chunk) ->
+#     lines = lines.concat(chunk.toString().split(/\r\n|\n|\r/))
+#
+# This will collect all the lines in the file, or you can process each line in
+# the data handler for more efficiency.
 module.exports =
 class ChunkedLineReader extends Readable
 
