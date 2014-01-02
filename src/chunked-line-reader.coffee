@@ -39,7 +39,7 @@ class ChunkedLineReader extends Readable
 
       while bytesRead
         # Scary looking. Uses very few new objects
-        char = if process.platform is 'win32' then 13 else 10
+        char = 10
         index = lastIndexOf(chunkedBuffer, bytesRead, char)
 
         if index < 0
