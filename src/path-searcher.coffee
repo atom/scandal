@@ -61,14 +61,16 @@ class PathSearcher extends EventEmitter
       matchEndIndex = regex.lastIndex
 
       if lineTextLength < @maxLineLength
+        # The line is already short enough, we dont need to do any trimming
         lineText = line
       else
         # TODO: I want to break this into a function, but it needs to return the
         # new text and an offset, or an offset and a length. I am worried about
-        # speed and creating a bunch of arrays just for returning from the
-        # proposed function.
+        # speed and creating a bunch of arrays just for returning from said
+        # function.
 
-        # Find the line context around the match
+        # Find the initial context around the match. This will likely break on
+        # words or be too short. We will fix in the subsequent lines.
         lineTextOffset = Math.round(matchIndex - (@maxLineLength - matchLength) / 2)
         lineTextEndOffset = lineTextOffset + @maxLineLength
 
@@ -85,6 +87,7 @@ class PathSearcher extends EventEmitter
         lineTextOffset = @findWordBreak(line, lineTextOffset, -1)
         lineTextEndOffset = @findWordBreak(line, lineTextEndOffset, 1) + 1
 
+        # Trim the text and give the contexualized line to the user
         lineTextLength = lineTextEndOffset - lineTextOffset
         lineText = line.substr(lineTextOffset, lineTextLength)
 
