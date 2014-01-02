@@ -83,36 +83,63 @@ describe "PathSearcher", ->
   describe "searchPath()", ->
     filePath = null
 
-    beforeEach ->
-      filePath = path.join(rootPath, 'sample.js')
+    describe "With unix line endings", ->
+      beforeEach ->
+        filePath = path.join(rootPath, 'sample.js')
 
-    it "does not call results-found when there are no results found", ->
-      searcher.on('results-found', resultsHandler = jasmine.createSpy())
-      searcher.searchPath(/nounicorns/gi, filePath, finishedHandler = jasmine.createSpy())
+      it "does not call results-found when there are no results found", ->
+        searcher.on('results-found', resultsHandler = jasmine.createSpy())
+        searcher.searchPath(/nounicorns/gi, filePath, finishedHandler = jasmine.createSpy())
 
-      waitsFor ->
-        finishedHandler.callCount > 0
+        waitsFor ->
+          finishedHandler.callCount > 0
 
-      runs ->
-        expect(resultsHandler).not.toHaveBeenCalled()
+        runs ->
+          expect(resultsHandler).not.toHaveBeenCalled()
 
-    it "finds matches in a file", ->
-      searcher.on('results-found', resultsHandler = jasmine.createSpy())
-      searcher.searchPath(/items/gi, filePath, finishedHandler = jasmine.createSpy())
+      it "finds matches in a file", ->
+        searcher.on('results-found', resultsHandler = jasmine.createSpy())
+        searcher.searchPath(/items/gi, filePath, finishedHandler = jasmine.createSpy())
 
-      waitsFor ->
-        finishedHandler.callCount > 0
+        waitsFor ->
+          finishedHandler.callCount > 0
 
-      runs ->
-        expect(resultsHandler.callCount).toBe 1
+        runs ->
+          expect(resultsHandler.callCount).toBe 1
 
-        results = resultsHandler.mostRecentCall.args[0]
-        expect(results.filePath).toBe filePath
-        expect(results.matches.length).toBe 6
+          results = resultsHandler.mostRecentCall.args[0]
+          expect(results.filePath).toBe filePath
+          expect(results.matches.length).toBe 6
 
-        expect(results.matches[0].lineText).toBe '  var sort = function(items) {'
-        expect(results.matches[0].matchText).toBe 'items'
-        expect(results.matches[0].range).toEqual [[1, 22], [1, 27]]
+          expect(results.matches[0].lineText).toBe '  var sort = function(items) {'
+          expect(results.matches[0].matchText).toBe 'items'
+          expect(results.matches[0].range).toEqual [[1, 22], [1, 27]]
+
+    describe "With windows line endings", ->
+      beforeEach ->
+        filePath = path.join(rootPath, 'sample-with-windows-line-endings.js')
+
+      it "finds matches in a file", ->
+        searcher.on('results-found', resultsHandler = jasmine.createSpy())
+        searcher.searchPath(/sort/gi, filePath, finishedHandler = jasmine.createSpy())
+
+        waitsFor ->
+          finishedHandler.callCount > 0
+
+        runs ->
+          expect(resultsHandler.callCount).toBe 1
+
+          results = resultsHandler.mostRecentCall.args[0]
+          expect(results.filePath).toBe filePath
+          expect(results.matches.length).toBe 5
+
+          expect(results.matches[0].lineText).toBe 'var quicksort = function () {'
+          expect(results.matches[0].matchText).toBe 'sort'
+          expect(results.matches[0].range).toEqual [[0, 9], [0, 13]]
+
+          expect(results.matches[1].lineText).toBe '  var sort = function(items) {'
+          expect(results.matches[1].matchText).toBe 'sort'
+          expect(results.matches[1].range).toEqual [[1, 6], [1, 10]]
 
   describe "searchPaths()", ->
     filePaths = null

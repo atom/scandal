@@ -6,6 +6,7 @@ ChunkedLineReader = require("./chunked-line-reader")
 
 MAX_LINE_LENGTH = 100
 WORD_BREAK_REGEX = /[ \r\n\t;:?=&\/]/
+LINE_END_REGEX = /\r\n|\n|\r/
 
 module.exports =
 class PathSearcher extends EventEmitter
@@ -40,7 +41,7 @@ class PathSearcher extends EventEmitter
       doneCallback(output)
 
     reader.on 'data', (chunk) =>
-      lines = chunk.toString().split(os.EOL)
+      lines = chunk.toString().split(LINE_END_REGEX)
       for line in lines
         lineMatches = @searchLine(regex, line, lineNumber++)
 

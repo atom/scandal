@@ -35,9 +35,9 @@ describe "PathScanner", ->
       runs ->
         # symlink-to-file1.txt is a file on windows
         if process.platform is 'win32'
-          expect(paths.length).toBe 15
+          expect(paths.length).toBe 16
         else
-          expect(paths.length).toBe 14
+          expect(paths.length).toBe 15
 
         expect(paths).toContain path.join(rootPath, 'file1.txt')
         expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
@@ -55,7 +55,7 @@ describe "PathScanner", ->
           finishedHandler.callCount > 0
 
         runs ->
-          expect(paths.length).toBe 3
+          expect(paths.length).toBe 4
           expect(paths).toContain path.join(rootPath, 'newdir', 'deep_dir.js')
           expect(paths).toContain path.join(rootPath, 'sample.js')
 
