@@ -53,7 +53,7 @@ class PathSearcher extends EventEmitter
     matches = null
     lineTextOffset = 0
 
-    while(regex.test(line))
+    while regex.test(line)
       lineTextOffset = 0
       lineTextLength = line.length
       matchText = RegExp.lastMatch
