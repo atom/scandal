@@ -14,7 +14,8 @@ lastIndexOf = (buffer, length, char) ->
 #   lines = []
 #   reader = new ChunkedLineReader('some/file.txt')
 #   reader.on 'data', (chunk) ->
-#     lines = lines.concat(chunk.toString().split(/\r\n|\n|\r/))
+#     line = chunk.toString().replace(/\r?\n?$/, '')
+#     lines = lines.concat(line.split(/\r\n|\n|\r/))
 #
 # This will collect all the lines in the file, or you can process each line in
 # the data handler for more efficiency.

@@ -21,7 +21,8 @@ describe "ChunkedLineReader", ->
 
     allLines = []
     reader.on 'data', (chunk) ->
-      allLines = allLines.concat(chunk.toString().split(os.EOL))
+      line = chunk.toString().replace(/\r?\n?$/, '')
+      allLines = allLines.concat(line.split(os.EOL))
 
     waitsFor ->
       endHandler.callCount > 0
@@ -54,7 +55,8 @@ describe "ChunkedLineReader", ->
 
     allLines = []
     reader.on 'data', (chunk) ->
-      allLines = allLines.concat(chunk.toString().split(os.EOL))
+      line = chunk.toString().replace(/\r?\n?$/, '')
+      allLines = allLines.concat(line.split(os.EOL))
 
     waitsFor ->
       endHandler.callCount > 0
@@ -74,7 +76,6 @@ describe "ChunkedLineReader", ->
         ''
         '  return sort(Array.apply(this, arguments));'
         '};'
-        ''
       ]
 
       expect(allLines.length).toEqual sample.length
@@ -89,7 +90,8 @@ describe "ChunkedLineReader", ->
 
     allLines = []
     reader.on 'data', (chunk) ->
-      allLines = allLines.concat(chunk.toString().split('\r\n'))
+      line = chunk.toString().replace(/\r?\n?$/, '')
+      allLines = allLines.concat(line.split('\r\n'))
 
     waitsFor ->
       endHandler.callCount > 0
