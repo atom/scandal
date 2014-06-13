@@ -63,3 +63,27 @@ describe "PathReplacer", ->
         expect(resultsHandler).not.toHaveBeenCalled()
         replacedFile = fs.readFileSync(filePath).toString()
         expect(replacedFile).toEqual sampleContent
+
+    describe "when the file has different permissions than temp files", ->
+      [stat, replaceFilePath] = []
+      beforeEach ->
+        replaceFilePath = path.join(rootPath, 'replaceme.js')
+        fs.writeFileSync(replaceFilePath, 'Some file with content to replace')
+        fs.chmodSync(replaceFilePath, '777')
+        stat = fs.statSync(replaceFilePath)
+
+      afterEach ->
+        fs.unlinkSync(replaceFilePath)
+
+      it "replaces and keeps the same file modes", ->
+        replacer.replacePaths(/content/gi, 'omgwow', [replaceFilePath], finishedHandler = jasmine.createSpy())
+
+        waitsFor ->
+          finishedHandler.callCount > 0
+
+        runs ->
+          replacedFile = fs.readFileSync(replaceFilePath).toString()
+          expect(replacedFile).toEqual 'Some file with omgwow to replace'
+
+          newStat = fs.statSync(replaceFilePath)
+          expect(newStat.mode).toBe stat.mode

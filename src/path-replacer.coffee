@@ -1,6 +1,6 @@
 _ = require 'underscore'
 fs = require 'fs'
-temp = require 'temp'
+temp = require('temp').track()
 {EventEmitter} = require 'events'
 {Transform} = require 'stream'
 {EOL} = require 'os'
@@ -53,17 +53,11 @@ class PathReplacer extends EventEmitter
         result = {filePath, replacements}
         @emit('path-replaced', result)
 
-      tempStat = fs.statSync(output.path)
-      origStat = fs.statSync(filePath)
-      fs.chmodSync(output.path, origStat.mode) if origStat.mode != tempStat.mode
-      try
-        fs.renameSync output.path, filePath
-      catch e
-        if e.code is 'EXDEV'
-          readStream = fs.createReadStream output.path
-          writeStream = fs.createWriteStream filePath
-          readStream.pipe writeStream
+      readStream = fs.createReadStream output.path
+      writeStream = fs.createWriteStream filePath
+      writeStream.on 'finish', ->
+        doneCallback(result)
+        temp.cleanup()
 
-      doneCallback(result)
-
+      readStream.pipe writeStream
     reader.pipe(replacer).pipe(output)
