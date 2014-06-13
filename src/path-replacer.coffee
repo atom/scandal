@@ -56,7 +56,13 @@ class PathReplacer extends EventEmitter
       tempStat = fs.statSync(output.path)
       origStat = fs.statSync(filePath)
       fs.chmodSync(output.path, origStat.mode) if origStat.mode != tempStat.mode
-      fs.renameSync(output.path, filePath)
+      try
+        fs.renameSync output.path, filePath
+      catch e
+        if e.code is 'EXDEV'
+          readStream = fs.createReadStream output.path
+          writeStream = fs.createWriteStream filePath
+          readStream.pipe writeStream
 
       doneCallback(result)
 
