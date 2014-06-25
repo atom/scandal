@@ -5,10 +5,11 @@ PathScanner = require './path-scanner'
 PathReplacer = require './path-replacer'
 path = require "path"
 
-search = require('./single-process-search').search
-singleProcessScanMain = require('./single-process-search').scanMain
-singleProcessSearchMain = require('./single-process-search').searchMain
-singleProcessReplaceMain = require('./single-process-search').replaceMain
+SingleProcess = require('./single-process-search')
+{search} = SingleProcess
+singleProcessScanMain = SingleProcess.scanMain
+singleProcessSearchMain = SingleProcess.searchMain
+singleProcessReplaceMain = SingleProcess.replaceMain
 
 ###
 This CLI is mainly for benchmarking. While there may be useful data output to
