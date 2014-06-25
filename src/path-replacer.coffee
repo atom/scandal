@@ -57,7 +57,6 @@ class PathReplacer extends EventEmitter
       writeStream = fs.createWriteStream filePath
       writeStream.on 'finish', ->
         doneCallback(result)
-        temp.cleanup()
 
       readStream.pipe writeStream
     reader.pipe(replacer).pipe(output)
