@@ -164,6 +164,30 @@ describe "PathSearcher", ->
         path.join(rootPath, 'other.txt')
       ]
 
+    describe "when a file doesnt exist", ->
+      beforeEach ->
+        filePaths.push '/doesnt-exist.js'
+        filePaths.push '/nope-not-this.js'
+
+      it "calls the done callback with a list of errors", ->
+        searcher.on('results-not-found', noResultsHandler = jasmine.createSpy())
+        searcher.on('results-found', resultsHandler = jasmine.createSpy())
+        searcher.searchPaths(/nounicorns/gi, filePaths, finishedHandler = jasmine.createSpy())
+
+        waitsFor ->
+          finishedHandler.callCount > 0
+
+        runs ->
+          expect(resultsHandler).not.toHaveBeenCalled()
+          expect(noResultsHandler.callCount).toBe 4
+          expect(noResultsHandler.argsForCall[0][0]).toBe filePaths[0]
+          expect(noResultsHandler.argsForCall[1][0]).toBe filePaths[1]
+          expect(noResultsHandler.argsForCall[1][0]).toBe filePaths[1]
+
+          errors = finishedHandler.mostRecentCall.args[1]
+          expect(errors.length).toBe 2
+          expect(errors[0].code).toBe 'ENOENT'
+
     it "emits results-not-found when there are no results found", ->
       searcher.on('results-not-found', noResultsHandler = jasmine.createSpy())
       searcher.on('results-found', resultsHandler = jasmine.createSpy())

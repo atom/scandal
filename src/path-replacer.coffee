@@ -28,16 +28,21 @@ class PathReplacer extends EventEmitter
   constructor: ({@dryReplace}={}) ->
 
   replacePaths: (regex, replacementText, paths, doneCallback) ->
+    errors = null
     results = null
     pathsReplaced = 0
 
     for filePath in paths
-      @replacePath regex, replacementText, filePath, (result) ->
+      @replacePath regex, replacementText, filePath, (result, error) ->
         if result
           results ?= []
           results.push(result)
 
-        doneCallback(results) if ++pathsReplaced == paths.length
+        if error
+          errors ?= []
+          errors.push error
+
+        doneCallback(results, errors) if ++pathsReplaced == paths.length
 
   replacePath: (regex, replacementText, filePath, doneCallback) ->
     reader = new ChunkedLineReader(filePath)

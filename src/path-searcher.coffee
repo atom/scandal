@@ -17,16 +17,21 @@ class PathSearcher extends EventEmitter
     @wordBreakRegex ?= WORD_BREAK_REGEX
 
   searchPaths: (regex, paths, doneCallback) ->
+    errors = null
     results = null
     searches = 0
 
     for filePath in paths
-      @searchPath regex, filePath, (pathResult) ->
+      @searchPath regex, filePath, (pathResult, error) ->
         if pathResult
           results ?= []
           results.push(pathResult)
 
-        doneCallback(results) if ++searches == paths.length
+        if error
+          errors ?= []
+          errors.push(error)
+
+        doneCallback(results, errors) if ++searches == paths.length
 
   searchPath: (regex, filePath, doneCallback) ->
     matches = null
