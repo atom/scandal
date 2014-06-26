@@ -10,6 +10,20 @@ describe "PathReplacer", ->
     replacer = new PathReplacer()
     rootPath = fs.realpathSync("spec/fixtures/many-files")
 
+  describe "replacePath()", ->
+    describe "when a file doesnt exist", ->
+      it "fails gracefully when the path does not exist", ->
+        replacer.on('path-replaced', replacedHandler = jasmine.createSpy())
+        replacer.replacePath(/nope/gi, 'replacement', '/this-does-not-exist.js', finishedHandler = jasmine.createSpy())
+
+        waitsFor ->
+          finishedHandler.callCount > 0
+
+        runs ->
+          expect(replacedHandler).not.toHaveBeenCalled()
+          expect(finishedHandler).toHaveBeenCalled()
+          expect(finishedHandler.mostRecentCall.args[1].code).toBe 'ENOENT'
+
   describe "replacePaths()", ->
     [filePath, sampleContent] = []
 
