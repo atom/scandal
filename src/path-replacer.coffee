@@ -18,14 +18,13 @@ class ReplaceTransformer extends Transform
     matches = data.match(@regex)
     @replacements += matches.length if matches
 
-    data = data.replace(@regex, @replacementText) unless @dryReplace
+    data = data.replace(@regex, @replacementText) if matches and not @dryReplace
 
     @push(data, 'utf8')
     done()
 
 module.exports =
 class PathReplacer extends EventEmitter
-
   constructor: ({@dryReplace}={}) ->
 
   replacePaths: (regex, replacementText, paths, doneCallback) ->
