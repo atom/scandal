@@ -32,6 +32,7 @@ class PathSearcher extends EventEmitter
     matches = null
     lineNumber = 0
     reader = new ChunkedLineReader(filePath)
+    error = null
 
     reader.on 'end', =>
       if matches?.length
@@ -39,16 +40,19 @@ class PathSearcher extends EventEmitter
         @emit('results-found', output)
       else
         @emit('results-not-found', filePath)
-      doneCallback(output)
+      doneCallback(output, error)
 
-    reader.on 'data', (chunk) =>
-      lines = chunk.toString().replace(TRAILING_LINE_END_REGEX, '').split(LINE_END_REGEX)
-      for line in lines
-        lineMatches = @searchLine(regex, line, lineNumber++)
+    try
+      reader.on 'data', (chunk) =>
+        lines = chunk.toString().replace(TRAILING_LINE_END_REGEX, '').split(LINE_END_REGEX)
+        for line in lines
+          lineMatches = @searchLine(regex, line, lineNumber++)
 
-        if lineMatches?
-          matches ?= []
-          matches.push(match) for match in lineMatches
+          if lineMatches?
+            matches ?= []
+            matches.push(match) for match in lineMatches
+    catch e
+      error = e
 
   searchLine: (regex, line, lineNumber) ->
     matches = null
