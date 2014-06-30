@@ -49,6 +49,7 @@ class PathReplacer extends EventEmitter
     try
       return doneCallback(null) if reader.isBinaryFile()
     catch error
+      @emit('error', filePath, error)
       return doneCallback(null, error)
 
     replacer = new ReplaceTransformer(regex, replacementText, {@dryReplace})
@@ -68,9 +69,11 @@ class PathReplacer extends EventEmitter
       try
         readStream.pipe(writeStream)
       catch error
+        @emit('error', filePath, error)
         doneCallback(null, error)
 
     try
       reader.pipe(replacer).pipe(output)
     catch error
+      @emit('error', filePath, error)
       doneCallback(null, error)

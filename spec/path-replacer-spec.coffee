@@ -12,7 +12,8 @@ describe "PathReplacer", ->
 
   describe "replacePath()", ->
     describe "when a file doesnt exist", ->
-      it "fails gracefully when the path does not exist", ->
+      it "returns error in the doneCallback and emits an 'error' event when the path does not exist", ->
+        replacer.on('error', errorHandler = jasmine.createSpy())
         replacer.on('path-replaced', replacedHandler = jasmine.createSpy())
         replacer.replacePath(/nope/gi, 'replacement', '/this-does-not-exist.js', finishedHandler = jasmine.createSpy())
 
@@ -23,6 +24,10 @@ describe "PathReplacer", ->
           expect(replacedHandler).not.toHaveBeenCalled()
           expect(finishedHandler).toHaveBeenCalled()
           expect(finishedHandler.mostRecentCall.args[1].code).toBe 'ENOENT'
+
+          expect(errorHandler).toHaveBeenCalled()
+          expect(errorHandler.mostRecentCall.args[0]).toBe('/this-does-not-exist.js')
+          expect(errorHandler.mostRecentCall.args[1].code).toBe 'ENOENT'
 
   describe "replacePaths()", ->
     [filePath, sampleContent] = []

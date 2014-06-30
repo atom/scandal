@@ -84,7 +84,8 @@ describe "PathSearcher", ->
     filePath = null
 
     describe "When the file doesnt exist", ->
-      it "fails gracefully when the path does not exist", ->
+      it "returns error in the doneCallback and emits an 'error' event when the path does not exist", ->
+        searcher.on('error', errorHandler = jasmine.createSpy())
         searcher.on('results-found', resultsHandler = jasmine.createSpy())
         searcher.searchPath(/nope/gi, '/this-does-not-exist.js', finishedHandler = jasmine.createSpy())
 
@@ -95,6 +96,10 @@ describe "PathSearcher", ->
           expect(resultsHandler).not.toHaveBeenCalled()
           expect(finishedHandler).toHaveBeenCalled()
           expect(finishedHandler.mostRecentCall.args[1].code).toBe 'ENOENT'
+
+          expect(errorHandler).toHaveBeenCalled()
+          expect(errorHandler.mostRecentCall.args[0]).toBe('/this-does-not-exist.js')
+          expect(errorHandler.mostRecentCall.args[1].code).toBe 'ENOENT'
 
     describe "With unix line endings", ->
       beforeEach ->
