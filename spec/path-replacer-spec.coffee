@@ -40,6 +40,7 @@ describe "PathReplacer", ->
       fs.writeFileSync(filePath, sampleContent)
 
     it "can make a replacement", ->
+      replacer.on('file-error', errorHandler = jasmine.createSpy())
       replacer.on('path-replaced', resultsHandler = jasmine.createSpy())
       replacer.replacePaths(/items/gi, 'omgwow', [filePath], finishedHandler = jasmine.createSpy())
 
@@ -47,6 +48,7 @@ describe "PathReplacer", ->
         finishedHandler.callCount > 0
 
       runs ->
+        expect(errorHandler).not.toHaveBeenCalled()
         expect(resultsHandler).toHaveBeenCalled()
         expect(resultsHandler.mostRecentCall.args[0]).toEqual
           filePath: filePath
