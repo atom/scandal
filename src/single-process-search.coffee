@@ -130,13 +130,6 @@ replace = (regex, replacement, scanner, replacer, doneCallback) ->
 
   chunkedScan(scanner, execPathFn, doneCallback)
 
-replacePaths = (paths, regex, replacement, replacer, doneCallback) ->
-  regex = globalizeRegex(regex)
-  execPathFn = (filePath, callback) ->
-    replacer.replacePath(regex, replacement, filePath, callback)
-
-  chunkedExecute(paths, execPathFn, doneCallback)
-
 replaceMain = (options) ->
   scanner = new PathScanner(options.pathToScan, options)
   replacer = new PathReplacer({dryReplace: options.dryReplace})
