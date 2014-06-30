@@ -1,8 +1,7 @@
 PathSearcher = require './path-searcher'
 PathScanner = require './path-scanner'
 PathReplacer = require './path-replacer'
-
-MAX_CONCURRENT_CHUNK = 20
+ChunkedScanner = require './chunked-scanner'
 
 ###
 Single Process
@@ -16,75 +15,6 @@ globalizeRegex = (regex) ->
     regex = new RegExp(regex.source, flags)
   regex
 
-# Only scan $MAX_CONCURRENT_CHUNK paths at a time.
-# Calls execPathFn(filePath, callback) for each path.
-chunkedScan = (scanner, execPathFn, doneCallback) ->
-  finishedScanning = false
-  pathCount = 0
-  pathsRunning = 0
-  pathQueue = []
-
-  runPath = (filePath) ->
-    pathsRunning++
-    execPathFn filePath, ->
-      pathCount--
-      pathsRunning--
-      checkIfFinished()
-
-  searchNextPath = ->
-    if pathsRunning < MAX_CONCURRENT_CHUNK and pathQueue.length
-      runPath(pathQueue.shift())
-
-  maybeSearchPath = (filePath) =>
-    pathCount++
-    if pathsRunning < MAX_CONCURRENT_CHUNK
-      runPath(filePath)
-    else
-      pathQueue.push(filePath)
-
-  onFinishedScanning = ->
-    finishedScanning = true
-    checkIfFinished()
-
-  checkIfFinished = ->
-    searchNextPath()
-    finish() if finishedScanning and pathCount == 0
-
-  finish = ->
-    scanner.removeListener 'path-found', maybeSearchPath
-    scanner.removeListener 'finished-scanning', onFinishedScanning
-    doneCallback()
-
-  scanner.on 'path-found', maybeSearchPath
-  scanner.on 'finished-scanning', onFinishedScanning
-  scanner.scan()
-
-# Only execute $MAX_CONCURRENT_CHUNK paths at a time.
-# Calls execPathFn(filePath, callback) for each path.
-chunkedExecute = (pathQueue, execPathFn, doneCallback) ->
-  pathCount = pathQueue.length
-  pathsRunning = 0
-
-  runPath = (filePath) ->
-    pathsRunning++
-    execPathFn filePath, ->
-      pathCount--
-      pathsRunning--
-      checkIfFinished()
-
-  searchNextPath = ->
-    if pathsRunning < MAX_CONCURRENT_CHUNK and pathQueue.length
-      runPath(pathQueue.shift())
-
-  checkIfFinished = ->
-    searchNextPath()
-    doneCallback() if pathCount == 0
-
-  for i in [0..MAX_CONCURRENT_CHUNK]
-    searchNextPath()
-
-  return
-
 
 ## Searching
 
@@ -93,7 +23,7 @@ search = (regex, scanner, searcher, doneCallback) ->
   execPathFn = (filePath, callback) ->
     searcher.searchPath(regex, filePath, callback)
 
-  chunkedScan(scanner, execPathFn, doneCallback)
+  new ChunkedScanner(scanner, execPathFn).execute(doneCallback)
 
 searchMain = (options) ->
   searcher = new PathSearcher()
@@ -128,7 +58,7 @@ replace = (regex, replacement, scanner, replacer, doneCallback) ->
   execPathFn = (filePath, callback) ->
     replacer.replacePath(regex, replacement, filePath, callback)
 
-  chunkedScan(scanner, execPathFn, doneCallback)
+  new ChunkedScanner(scanner, execPathFn).execute(doneCallback)
 
 replaceMain = (options) ->
   scanner = new PathScanner(options.pathToScan, options)
@@ -170,4 +100,4 @@ scanMain = (options) ->
 
   scanner.scan()
 
-module.exports = {scanMain, searchMain, replaceMain, search, replace, replacePaths}
+module.exports = {scanMain, searchMain, replaceMain, search, replace}
