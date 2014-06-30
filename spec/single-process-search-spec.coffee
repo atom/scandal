@@ -14,20 +14,40 @@ describe "search", ->
     scanner = new PathScanner(rootPath)
     searcher = new PathSearcher()
 
-  it "finds matches in a file", ->
-    searcher.on('results-found', resultsHandler = jasmine.createSpy())
-    search(/items/gi, scanner, searcher, finishedHandler = jasmine.createSpy())
+  describe "when there is no error", ->
+    it "finds matches in a file", ->
+      searcher.on('results-found', resultsHandler = jasmine.createSpy())
+      search(/items/gi, scanner, searcher, finishedHandler = jasmine.createSpy())
 
-    waitsFor ->
-      finishedHandler.callCount > 0
+      waitsFor ->
+        finishedHandler.callCount > 0
 
-    runs ->
-      expect(resultsHandler.callCount).toBe 3
+      runs ->
+        expect(resultsHandler.callCount).toBe 3
 
-      regex = /many-files\/sample(-)?.*\.js/g
-      expect(resultsHandler.argsForCall[0][0].filePath).toMatch regex
-      expect(resultsHandler.argsForCall[1][0].filePath).toMatch regex
-      expect(resultsHandler.argsForCall[2][0].filePath).toMatch regex
+        regex = /many-files\/sample(-)?.*\.js/g
+        expect(resultsHandler.argsForCall[0][0].filePath).toMatch regex
+        expect(resultsHandler.argsForCall[1][0].filePath).toMatch regex
+        expect(resultsHandler.argsForCall[2][0].filePath).toMatch regex
+
+  describe "when there is an error", ->
+    it "finishes searching and properly emits the error event", ->
+      scanSpy = spyOn(scanner, 'scan')
+
+      searcher.on('file-error', errorHandler = jasmine.createSpy())
+      searcher.on('results-found', resultsHandler = jasmine.createSpy())
+      search(/items/gi, scanner, searcher, finishedHandler = jasmine.createSpy())
+
+      scanner.emit('path-found', '/this-doesnt-exist.js')
+      scanner.emit('path-found', '/nope-not-this-either.js')
+      scanner.emit('finished-scanning')
+
+      waitsFor ->
+        finishedHandler.callCount > 0
+
+      runs ->
+        expect(errorHandler.callCount).toBe 2
+        expect(resultsHandler).not.toHaveBeenCalled()
 
 describe "replace", ->
   [scanner, replacer, rootPath] = []
@@ -57,3 +77,22 @@ describe "replace", ->
       runs ->
         expect(resultsHandler.callCount).toBe 1
         expect(resultsHandler.argsForCall[0][0].filePath).toContain 'sample.txt'
+
+  describe "when there is an error", ->
+    it "emits proper error events", ->
+      scanSpy = spyOn(scanner, 'scan')
+
+      replacer.on('file-error', errorHandler = jasmine.createSpy())
+      replacer.on('path-replaced', resultsHandler = jasmine.createSpy())
+      replace(/items/gi, 'kittens', scanner, replacer, finishedHandler = jasmine.createSpy())
+
+      scanner.emit('path-found', '/this-doesnt-exist.js')
+      scanner.emit('path-found', '/nope-not-this-either.js')
+      scanner.emit('finished-scanning')
+
+      waitsFor ->
+        finishedHandler.callCount > 0
+
+      runs ->
+        expect(errorHandler.callCount).toBe 2
+        expect(resultsHandler).not.toHaveBeenCalled()
