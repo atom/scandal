@@ -13,7 +13,7 @@ describe "PathReplacer", ->
   describe "replacePath()", ->
     describe "when a file doesnt exist", ->
       it "returns error in the doneCallback and emits an 'error' event when the path does not exist", ->
-        replacer.on('error', errorHandler = jasmine.createSpy())
+        replacer.on('file-error', errorHandler = jasmine.createSpy())
         replacer.on('path-replaced', replacedHandler = jasmine.createSpy())
         replacer.replacePath(/nope/gi, 'replacement', '/this-does-not-exist.js', finishedHandler = jasmine.createSpy())
 

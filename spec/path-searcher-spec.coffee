@@ -85,7 +85,7 @@ describe "PathSearcher", ->
 
     describe "When the file doesnt exist", ->
       it "returns error in the doneCallback and emits an 'error' event when the path does not exist", ->
-        searcher.on('error', errorHandler = jasmine.createSpy())
+        searcher.on('file-error', errorHandler = jasmine.createSpy())
         searcher.on('results-found', resultsHandler = jasmine.createSpy())
         searcher.searchPath(/nope/gi, '/this-does-not-exist.js', finishedHandler = jasmine.createSpy())
 
