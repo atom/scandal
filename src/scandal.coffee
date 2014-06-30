@@ -6,7 +6,7 @@ PathReplacer = require './path-replacer'
 path = require "path"
 
 SingleProcess = require('./single-process-search')
-{search} = SingleProcess
+{search, replace, replacePaths} = SingleProcess
 singleProcessScanMain = SingleProcess.scanMain
 singleProcessSearchMain = SingleProcess.searchMain
 singleProcessReplaceMain = SingleProcess.replaceMain
@@ -42,4 +42,4 @@ main = ->
   else
     singleProcessScanMain(options)
 
-module.exports = {main, search, PathSearcher, PathScanner, PathReplacer}
+module.exports = {main, search, replace, replacePaths, PathSearcher, PathScanner, PathReplacer}
