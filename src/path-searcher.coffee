@@ -2,6 +2,7 @@ _ = require("underscore")
 fs = require("fs")
 os = require("os")
 {EventEmitter} = require("events")
+ChunkedExecutor = require("./chunked-executor")
 ChunkedLineReader = require("./chunked-line-reader")
 
 MAX_LINE_LENGTH = 100
@@ -19,9 +20,8 @@ class PathSearcher extends EventEmitter
   searchPaths: (regex, paths, doneCallback) ->
     errors = null
     results = null
-    searches = 0
 
-    for filePath in paths
+    searchPath = (filePath, pathCallback) =>
       @searchPath regex, filePath, (pathResult, error) ->
         if pathResult
           results ?= []
@@ -31,7 +31,9 @@ class PathSearcher extends EventEmitter
           errors ?= []
           errors.push(error)
 
-        doneCallback(results, errors) if ++searches == paths.length
+        pathCallback()
+
+    new ChunkedExecutor(paths, searchPath).execute -> doneCallback(results, errors)
 
   searchPath: (regex, filePath, doneCallback) ->
     matches = null

@@ -5,6 +5,7 @@ temp = require('temp').track()
 {Transform} = require 'stream'
 {EOL} = require 'os'
 
+ChunkedExecutor = require './chunked-executor'
 ChunkedLineReader = require './chunked-line-reader'
 
 class ReplaceTransformer extends Transform
@@ -30,9 +31,8 @@ class PathReplacer extends EventEmitter
   replacePaths: (regex, replacementText, paths, doneCallback) ->
     errors = null
     results = null
-    pathsReplaced = 0
 
-    for filePath in paths
+    replacePath = (filePath, pathCallback) =>
       @replacePath regex, replacementText, filePath, (result, error) ->
         if result
           results ?= []
@@ -42,7 +42,9 @@ class PathReplacer extends EventEmitter
           errors ?= []
           errors.push error
 
-        doneCallback(results, errors) if ++pathsReplaced == paths.length
+        pathCallback()
+
+    new ChunkedExecutor(paths, replacePath).execute -> doneCallback(results, errors)
 
   replacePath: (regex, replacementText, filePath, doneCallback) ->
     reader = new ChunkedLineReader(filePath)
