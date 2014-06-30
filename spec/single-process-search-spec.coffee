@@ -4,7 +4,7 @@ PathScanner = require '../src/path-scanner'
 PathSearcher = require '../src/path-searcher'
 PathReplacer = require '../src/path-replacer'
 
-{search, replace} = require '../src/single-process-search'
+{search, replace, replacePaths} = require '../src/single-process-search'
 
 describe "search", ->
   [scanner, searcher, rootPath] = []
@@ -89,6 +89,49 @@ describe "replace", ->
       scanner.emit('path-found', '/this-doesnt-exist.js')
       scanner.emit('path-found', '/nope-not-this-either.js')
       scanner.emit('finished-scanning')
+
+      waitsFor ->
+        finishedHandler.callCount > 0
+
+      runs ->
+        expect(errorHandler.callCount).toBe 2
+        expect(resultsHandler).not.toHaveBeenCalled()
+
+describe "replacePaths", ->
+  [scanner, replacer, rootPath] = []
+
+  beforeEach ->
+    rootPath = fs.realpathSync("spec/fixtures/many-files")
+    replacer = new PathReplacer()
+
+  describe "when a replacement is made", ->
+    [filePath, sampleContent] = []
+
+    beforeEach ->
+      filePath = path.join(rootPath, 'sample.txt')
+      sampleContent = fs.readFileSync(filePath).toString()
+
+    afterEach ->
+      fs.writeFileSync(filePath, sampleContent)
+
+    it "finds matches and replaces said matches", ->
+      filePaths = [filePath, path.join(rootPath, 'sample.js')]
+      replacer.on('path-replaced', resultsHandler = jasmine.createSpy())
+      replacePaths(filePaths, /Some text/gi, 'kittens', replacer, finishedHandler = jasmine.createSpy())
+
+      waitsFor ->
+        finishedHandler.callCount > 0
+
+      runs ->
+        expect(resultsHandler.callCount).toBe 1
+        expect(resultsHandler.argsForCall[0][0].filePath).toContain 'sample.txt'
+
+  describe "when there is an error", ->
+    it "emits proper error events", ->
+      filePaths = ['/this-doesnt-exist.js', '/nope-not-this-either.js']
+      replacer.on('file-error', errorHandler = jasmine.createSpy())
+      replacer.on('path-replaced', resultsHandler = jasmine.createSpy())
+      replacePaths(filePaths, /items/gi, 'kittens', replacer, finishedHandler = jasmine.createSpy())
 
       waitsFor ->
         finishedHandler.callCount > 0

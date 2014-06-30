@@ -18,7 +18,7 @@ globalizeRegex = (regex) ->
 
 # Only scan $MAX_CONCURRENT_CHUNK paths at a time.
 # Calls execPathFn(filePath, callback) for each path.
-scan = (scanner, execPathFn, doneCallback) ->
+chunkedScan = (scanner, execPathFn, doneCallback) ->
   finishedScanning = false
   pathCount = 0
   pathsRunning = 0
@@ -59,6 +59,32 @@ scan = (scanner, execPathFn, doneCallback) ->
   scanner.on 'finished-scanning', onFinishedScanning
   scanner.scan()
 
+# Only execute $MAX_CONCURRENT_CHUNK paths at a time.
+# Calls execPathFn(filePath, callback) for each path.
+chunkedExecute = (pathQueue, execPathFn, doneCallback) ->
+  pathCount = pathQueue.length
+  pathsRunning = 0
+
+  runPath = (filePath) ->
+    pathsRunning++
+    execPathFn filePath, ->
+      pathCount--
+      pathsRunning--
+      checkIfFinished()
+
+  searchNextPath = ->
+    if pathsRunning < MAX_CONCURRENT_CHUNK and pathQueue.length
+      runPath(pathQueue.shift())
+
+  checkIfFinished = ->
+    searchNextPath()
+    doneCallback() if pathCount == 0
+
+  for i in [0..MAX_CONCURRENT_CHUNK]
+    searchNextPath()
+
+  return
+
 
 ## Searching
 
@@ -67,7 +93,7 @@ search = (regex, scanner, searcher, doneCallback) ->
   execPathFn = (filePath, callback) ->
     searcher.searchPath(regex, filePath, callback)
 
-  scan(scanner, execPathFn, doneCallback)
+  chunkedScan(scanner, execPathFn, doneCallback)
 
 searchMain = (options) ->
   searcher = new PathSearcher()
@@ -102,7 +128,14 @@ replace = (regex, replacement, scanner, replacer, doneCallback) ->
   execPathFn = (filePath, callback) ->
     replacer.replacePath(regex, replacement, filePath, callback)
 
-  scan(scanner, execPathFn, doneCallback)
+  chunkedScan(scanner, execPathFn, doneCallback)
+
+replacePaths = (paths, regex, replacement, replacer, doneCallback) ->
+  regex = globalizeRegex(regex)
+  execPathFn = (filePath, callback) ->
+    replacer.replacePath(regex, replacement, filePath, callback)
+
+  chunkedExecute(paths, execPathFn, doneCallback)
 
 replaceMain = (options) ->
   scanner = new PathScanner(options.pathToScan, options)
@@ -144,4 +177,4 @@ scanMain = (options) ->
 
   scanner.scan()
 
-module.exports = {scanMain, searchMain, replaceMain, scan, search, replace}
+module.exports = {scanMain, searchMain, replaceMain, search, replace, replacePaths}
