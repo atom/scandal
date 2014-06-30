@@ -58,7 +58,7 @@ class PathSearcher extends EventEmitter
             matches.push(match) for match in lineMatches
     catch e
       error = e
-      @emit('file-error', filePath, e)
+      @emit('file-error', e)
 
   searchLine: (regex, line, lineNumber) ->
     matches = null

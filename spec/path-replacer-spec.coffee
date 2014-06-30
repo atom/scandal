@@ -26,8 +26,8 @@ describe "PathReplacer", ->
           expect(finishedHandler.mostRecentCall.args[1].code).toBe 'ENOENT'
 
           expect(errorHandler).toHaveBeenCalled()
-          expect(errorHandler.mostRecentCall.args[0]).toBe('/this-does-not-exist.js')
-          expect(errorHandler.mostRecentCall.args[1].code).toBe 'ENOENT'
+          expect(errorHandler.mostRecentCall.args[0].path).toBe '/this-does-not-exist.js'
+          expect(errorHandler.mostRecentCall.args[0].code).toBe 'ENOENT'
 
   describe "replacePaths()", ->
     [filePath, sampleContent] = []
