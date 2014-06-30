@@ -16,7 +16,9 @@ globalizeRegex = (regex) ->
     regex = new RegExp(regex.source, flags)
   regex
 
-execPathsChunked = (scanner, execPathFn, doneCallback) ->
+# Only scan $MAX_CONCURRENT_CHUNK paths at a time.
+# Calls execPathFn(filePath, callback) for each path.
+scan = (scanner, execPathFn, doneCallback) ->
   finishedScanning = false
   pathCount = 0
   pathsRunning = 0
@@ -65,7 +67,7 @@ search = (regex, scanner, searcher, doneCallback) ->
   execPathFn = (filePath, callback) ->
     searcher.searchPath(regex, filePath, callback)
 
-  execPathsChunked(scanner, execPathFn, doneCallback)
+  scan(scanner, execPathFn, doneCallback)
 
 searchMain = (options) ->
   searcher = new PathSearcher()
@@ -100,7 +102,7 @@ replace = (regex, replacement, scanner, replacer, doneCallback) ->
   execPathFn = (filePath, callback) ->
     replacer.replacePath(regex, replacement, filePath, callback)
 
-  execPathsChunked(scanner, execPathFn, doneCallback)
+  scan(scanner, execPathFn, doneCallback)
 
 replaceMain = (options) ->
   scanner = new PathScanner(options.pathToScan, options)
@@ -142,4 +144,4 @@ scanMain = (options) ->
 
   scanner.scan()
 
-module.exports = {scanMain, searchMain, replaceMain, search}
+module.exports = {scanMain, searchMain, replaceMain, scan, search, replace}
