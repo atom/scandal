@@ -14,6 +14,21 @@ describe "ChunkedLineReader", ->
     ChunkedLineReader.CHUNK_SIZE = chunkSize
     ChunkedLineReader.chunkedBuffer = null
 
+  it "throws an error when the file does not exist", ->
+    dataHandler = jasmine.createSpy('data handler')
+
+    reader = new ChunkedLineReader('/this-does-not-exist.js')
+    reader.on 'end', endHandler = jasmine.createSpy('end handler')
+
+    expect( -> reader.on 'data', dataHandler ).toThrow()
+
+    waitsFor ->
+      endHandler.callCount > 0
+
+    runs ->
+      expect(endHandler).toHaveBeenCalled()
+      expect(dataHandler).not.toHaveBeenCalled()
+
   it "works with no newline at the end", ->
     rootPath = fs.realpathSync("spec/fixtures/many-files/sample.js")
     reader = new ChunkedLineReader(rootPath)

@@ -83,6 +83,24 @@ describe "PathSearcher", ->
   describe "searchPath()", ->
     filePath = null
 
+    describe "When the file doesnt exist", ->
+      it "returns error in the doneCallback and emits an 'error' event when the path does not exist", ->
+        searcher.on('file-error', errorHandler = jasmine.createSpy())
+        searcher.on('results-found', resultsHandler = jasmine.createSpy())
+        searcher.searchPath(/nope/gi, '/this-does-not-exist.js', finishedHandler = jasmine.createSpy())
+
+        waitsFor ->
+          finishedHandler.callCount > 0
+
+        runs ->
+          expect(resultsHandler).not.toHaveBeenCalled()
+          expect(finishedHandler).toHaveBeenCalled()
+          expect(finishedHandler.mostRecentCall.args[1].code).toBe 'ENOENT'
+
+          expect(errorHandler).toHaveBeenCalled()
+          expect(errorHandler.mostRecentCall.args[0].path).toBe '/this-does-not-exist.js'
+          expect(errorHandler.mostRecentCall.args[0].code).toBe 'ENOENT'
+
     describe "With unix line endings", ->
       beforeEach ->
         filePath = path.join(rootPath, 'sample.js')
@@ -150,6 +168,30 @@ describe "PathSearcher", ->
         path.join(rootPath, 'file.txt')
         path.join(rootPath, 'other.txt')
       ]
+
+    describe "when a file doesnt exist", ->
+      beforeEach ->
+        filePaths.push '/doesnt-exist.js'
+        filePaths.push '/nope-not-this.js'
+
+      it "calls the done callback with a list of errors", ->
+        searcher.on('results-not-found', noResultsHandler = jasmine.createSpy())
+        searcher.on('results-found', resultsHandler = jasmine.createSpy())
+        searcher.searchPaths(/nounicorns/gi, filePaths, finishedHandler = jasmine.createSpy())
+
+        waitsFor ->
+          finishedHandler.callCount > 0
+
+        runs ->
+          expect(resultsHandler).not.toHaveBeenCalled()
+          expect(noResultsHandler.callCount).toBe 4
+          expect(noResultsHandler.argsForCall[0][0]).toBe filePaths[0]
+          expect(noResultsHandler.argsForCall[1][0]).toBe filePaths[1]
+          expect(noResultsHandler.argsForCall[1][0]).toBe filePaths[1]
+
+          errors = finishedHandler.mostRecentCall.args[1]
+          expect(errors.length).toBe 2
+          expect(errors[0].code).toBe 'ENOENT'
 
     it "emits results-not-found when there are no results found", ->
       searcher.on('results-not-found', noResultsHandler = jasmine.createSpy())

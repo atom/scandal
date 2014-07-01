@@ -5,6 +5,7 @@ temp = require('temp').track()
 {Transform} = require 'stream'
 {EOL} = require 'os'
 
+ChunkedExecutor = require './chunked-executor'
 ChunkedLineReader = require './chunked-line-reader'
 
 class ReplaceTransformer extends Transform
@@ -18,31 +19,40 @@ class ReplaceTransformer extends Transform
     matches = data.match(@regex)
     @replacements += matches.length if matches
 
-    data = data.replace(@regex, @replacementText) unless @dryReplace
+    data = data.replace(@regex, @replacementText) if matches and not @dryReplace
 
     @push(data, 'utf8')
     done()
 
 module.exports =
 class PathReplacer extends EventEmitter
-
   constructor: ({@dryReplace}={}) ->
 
   replacePaths: (regex, replacementText, paths, doneCallback) ->
+    errors = null
     results = null
-    pathsReplaced = 0
 
-    for filePath in paths
-      @replacePath regex, replacementText, filePath, (result) ->
+    replacePath = (filePath, pathCallback) =>
+      @replacePath regex, replacementText, filePath, (result, error) ->
         if result
           results ?= []
           results.push(result)
 
-        doneCallback(results) if ++pathsReplaced == paths.length
+        if error
+          errors ?= []
+          errors.push error
+
+        pathCallback()
+
+    new ChunkedExecutor(paths, replacePath).execute -> doneCallback(results, errors)
 
   replacePath: (regex, replacementText, filePath, doneCallback) ->
     reader = new ChunkedLineReader(filePath)
-    return doneCallback(null) if reader.isBinaryFile()
+    try
+      return doneCallback(null) if reader.isBinaryFile()
+    catch error
+      @emit('file-error', error)
+      return doneCallback(null, error)
 
     replacer = new ReplaceTransformer(regex, replacementText, {@dryReplace})
     output = temp.createWriteStream()
@@ -57,7 +67,15 @@ class PathReplacer extends EventEmitter
       writeStream = fs.createWriteStream filePath
       writeStream.on 'finish', ->
         doneCallback(result)
-        temp.cleanup()
 
-      readStream.pipe writeStream
-    reader.pipe(replacer).pipe(output)
+      try
+        readStream.pipe(writeStream)
+      catch error
+        @emit('file-error', error)
+        doneCallback(null, error)
+
+    try
+      reader.pipe(replacer).pipe(output)
+    catch error
+      @emit('file-error', error)
+      doneCallback(null, error)

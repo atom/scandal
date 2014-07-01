@@ -1,62 +1,29 @@
 PathSearcher = require './path-searcher'
 PathScanner = require './path-scanner'
 PathReplacer = require './path-replacer'
-
-MAX_CONCURRENT_SEARCH = 20
+ChunkedScanner = require './chunked-scanner'
 
 ###
 Single Process
 ###
 
+globalizeRegex = (regex) ->
+  if not regex.global
+    flags = "g"
+    flags += "i" if regex.ignoreCase
+    flags += "m" if regex.multiline
+    regex = new RegExp(regex.source, flags)
+  regex
+
+
+## Searching
+
 search = (regex, scanner, searcher, doneCallback) ->
-  finishedScanning = false
-  pathCount = 0
-  pathsSearching = 0
-  pathQueue = []
-
-  globalizeRegex = (regex) ->
-    if not regex.global
-      flags = "g"
-      flags += "i" if regex.ignoreCase
-      flags += "m" if regex.multiline
-      regex = new RegExp(regex.source, flags)
-    regex
-
-  searchPath = (filePath) ->
-    pathsSearching++
-    searcher.searchPath regex, filePath, ->
-      pathCount--
-      pathsSearching--
-      checkIfFinished()
-
-  searchNextPath = ->
-    if pathsSearching < MAX_CONCURRENT_SEARCH and pathQueue.length
-      searchPath(pathQueue.shift())
-
-  maybeSearchPath = (filePath) =>
-    pathCount++
-    if pathsSearching < MAX_CONCURRENT_SEARCH
-      searchPath(filePath)
-    else
-      pathQueue.push(filePath)
-
-  onFinishedScanning = ->
-    finishedScanning = true
-    checkIfFinished()
-
-  checkIfFinished = ->
-    searchNextPath()
-    finish() if finishedScanning and pathCount == 0
-
-  finish = ->
-    scanner.removeListener 'path-found', maybeSearchPath
-    scanner.removeListener 'finished-scanning', onFinishedScanning
-    doneCallback()
-
   regex = globalizeRegex(regex)
-  scanner.on 'path-found', maybeSearchPath
-  scanner.on 'finished-scanning', onFinishedScanning
-  scanner.scan()
+  execPathFn = (filePath, callback) ->
+    searcher.searchPath(regex, filePath, callback)
+
+  new ChunkedScanner(scanner, execPathFn).execute(doneCallback)
 
 searchMain = (options) ->
   searcher = new PathSearcher()
@@ -83,6 +50,16 @@ searchMain = (options) ->
     console.timeEnd 'Single Process Search'
     console.log "#{resultCount} matches in #{count} files. Searched #{pathCount} files"
 
+
+## Replacing
+
+replace = (regex, replacement, scanner, replacer, doneCallback) ->
+  regex = globalizeRegex(regex)
+  execPathFn = (filePath, callback) ->
+    replacer.replacePath(regex, replacement, filePath, callback)
+
+  new ChunkedScanner(scanner, execPathFn).execute(doneCallback)
+
 replaceMain = (options) ->
   scanner = new PathScanner(options.pathToScan, options)
   replacer = new PathReplacer({dryReplace: options.dryReplace})
@@ -101,12 +78,12 @@ replaceMain = (options) ->
     totalReplacements += replacements
     console.log('Replaced', replacements, 'in', filePath) if options.verbose
 
-  scanner.on 'finished-scanning', ->
-    replacer.replacePaths regex, options.replace, paths, ->
-      console.timeEnd 'Single Process Search + Replace'
-      console.log "Replaced #{totalReplacements} matches in #{totalFiles} files"
+  replace regex, options.replace, scanner, replacer, ->
+    console.timeEnd 'Single Process Search + Replace'
+    console.log "Replaced #{totalReplacements} matches in #{totalFiles} files"
 
-  scanner.scan()
+
+## Scanning
 
 scanMain = (options) ->
   scanner = new PathScanner(options.pathToScan, options)
@@ -123,4 +100,4 @@ scanMain = (options) ->
 
   scanner.scan()
 
-module.exports = {scanMain, searchMain, replaceMain, search}
+module.exports = {scanMain, searchMain, replaceMain, search, replace}

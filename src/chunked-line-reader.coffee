@@ -78,5 +78,5 @@ class ChunkedLineReader extends Readable
       @push(remainder) if remainder
 
     finally
-      fs.closeSync(fd)
+      fs.closeSync(fd) if fd?
       @push(null)

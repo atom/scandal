@@ -2,6 +2,7 @@ _ = require("underscore")
 fs = require("fs")
 os = require("os")
 {EventEmitter} = require("events")
+ChunkedExecutor = require("./chunked-executor")
 ChunkedLineReader = require("./chunked-line-reader")
 
 MAX_LINE_LENGTH = 100
@@ -17,21 +18,28 @@ class PathSearcher extends EventEmitter
     @wordBreakRegex ?= WORD_BREAK_REGEX
 
   searchPaths: (regex, paths, doneCallback) ->
+    errors = null
     results = null
-    searches = 0
 
-    for filePath in paths
-      @searchPath regex, filePath, (pathResult) ->
+    searchPath = (filePath, pathCallback) =>
+      @searchPath regex, filePath, (pathResult, error) ->
         if pathResult
           results ?= []
           results.push(pathResult)
 
-        doneCallback(results) if ++searches == paths.length
+        if error
+          errors ?= []
+          errors.push(error)
+
+        pathCallback()
+
+    new ChunkedExecutor(paths, searchPath).execute -> doneCallback(results, errors)
 
   searchPath: (regex, filePath, doneCallback) ->
     matches = null
     lineNumber = 0
     reader = new ChunkedLineReader(filePath)
+    error = null
 
     reader.on 'end', =>
       if matches?.length
@@ -39,16 +47,20 @@ class PathSearcher extends EventEmitter
         @emit('results-found', output)
       else
         @emit('results-not-found', filePath)
-      doneCallback(output)
+      doneCallback(output, error)
 
-    reader.on 'data', (chunk) =>
-      lines = chunk.toString().replace(TRAILING_LINE_END_REGEX, '').split(LINE_END_REGEX)
-      for line in lines
-        lineMatches = @searchLine(regex, line, lineNumber++)
+    try
+      reader.on 'data', (chunk) =>
+        lines = chunk.toString().replace(TRAILING_LINE_END_REGEX, '').split(LINE_END_REGEX)
+        for line in lines
+          lineMatches = @searchLine(regex, line, lineNumber++)
 
-        if lineMatches?
-          matches ?= []
-          matches.push(match) for match in lineMatches
+          if lineMatches?
+            matches ?= []
+            matches.push(match) for match in lineMatches
+    catch e
+      error = e
+      @emit('file-error', e)
 
   searchLine: (regex, line, lineNumber) ->
     matches = null

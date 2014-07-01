@@ -10,6 +10,25 @@ describe "PathReplacer", ->
     replacer = new PathReplacer()
     rootPath = fs.realpathSync("spec/fixtures/many-files")
 
+  describe "replacePath()", ->
+    describe "when a file doesnt exist", ->
+      it "returns error in the doneCallback and emits an 'error' event when the path does not exist", ->
+        replacer.on('file-error', errorHandler = jasmine.createSpy())
+        replacer.on('path-replaced', replacedHandler = jasmine.createSpy())
+        replacer.replacePath(/nope/gi, 'replacement', '/this-does-not-exist.js', finishedHandler = jasmine.createSpy())
+
+        waitsFor ->
+          finishedHandler.callCount > 0
+
+        runs ->
+          expect(replacedHandler).not.toHaveBeenCalled()
+          expect(finishedHandler).toHaveBeenCalled()
+          expect(finishedHandler.mostRecentCall.args[1].code).toBe 'ENOENT'
+
+          expect(errorHandler).toHaveBeenCalled()
+          expect(errorHandler.mostRecentCall.args[0].path).toBe '/this-does-not-exist.js'
+          expect(errorHandler.mostRecentCall.args[0].code).toBe 'ENOENT'
+
   describe "replacePaths()", ->
     [filePath, sampleContent] = []
 
@@ -21,6 +40,7 @@ describe "PathReplacer", ->
       fs.writeFileSync(filePath, sampleContent)
 
     it "can make a replacement", ->
+      replacer.on('file-error', errorHandler = jasmine.createSpy())
       replacer.on('path-replaced', resultsHandler = jasmine.createSpy())
       replacer.replacePaths(/items/gi, 'omgwow', [filePath], finishedHandler = jasmine.createSpy())
 
@@ -28,6 +48,7 @@ describe "PathReplacer", ->
         finishedHandler.callCount > 0
 
       runs ->
+        expect(errorHandler).not.toHaveBeenCalled()
         expect(resultsHandler).toHaveBeenCalled()
         expect(resultsHandler.mostRecentCall.args[0]).toEqual
           filePath: filePath
@@ -51,6 +72,7 @@ describe "PathReplacer", ->
           };
         '''.replace(/\n/g, os.EOL)
         expect(replacedFile).toEqual replacedContent
+        expect(finishedHandler.mostRecentCall.args[1]).toEqual null
 
     it "makes no replacement when nothing to replace", ->
       replacer.on('path-replaced', resultsHandler = jasmine.createSpy())
@@ -87,3 +109,17 @@ describe "PathReplacer", ->
 
           newStat = fs.statSync(replaceFilePath)
           expect(newStat.mode).toBe stat.mode
+
+    describe "when a file doesnt exist", ->
+      it "calls the done callback with a list of errors", ->
+        replacer.on('path-replaced', resultsHandler = jasmine.createSpy())
+        replacer.replacePaths(/content/gi, 'omgwow', ['/doesnt-exist.js', '/nope.js'], finishedHandler = jasmine.createSpy())
+
+        waitsFor ->
+          finishedHandler.callCount > 0
+
+        runs ->
+          expect(resultsHandler).not.toHaveBeenCalled()
+          errors = finishedHandler.mostRecentCall.args[1]
+          expect(errors.length).toBe 2
+          expect(errors[0].code).toBe 'ENOENT'
