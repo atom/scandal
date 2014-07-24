@@ -27,7 +27,7 @@
   "dependencies": {
     "underscore": "~1.5.1",
     "minimatch": "0.2.13",
-    "git-utils": "2.x",
+    "git-utils": "^2.1",
     "argparse": "~0.1",
     "isbinaryfile": "~2.0.1",
     "split": "~0.2"
