@@ -10,13 +10,103 @@ WORD_BREAK_REGEX = /[ \r\n\t;:?=&\/]/
 LINE_END_REGEX = /\r\n|\n|\r/
 TRAILING_LINE_END_REGEX = /\r?\n?$/
 
+# Public: Will search through paths specified for a regex.
+#
+# Like the {PathScanner} the {PathSearcher} keeps no state. You need to consume
+# results via the done callbacks or events.
+#
+# File reading is fast and memory efficient. It reads in 10k chunks and writes
+# over each previous chunk. Small object creation is kept to a minimum during
+# the read to make light use of the GC.
+#
+# ## Examples
+#
+# ```coffee
+# {PathSearcher} = require 'scandal'
+# searcher = new PathSearcher()
+#
+# # You can subscribe to a `results-found` event
+# searcher.on 'results-found', (result) ->
+#   # result will contain all the matches for a single path
+#   console.log("Single Path's Results", result)
+#
+# # Search a list of paths
+# searcher.searchPaths /text/gi, ['/Some/path', ...], (results) ->
+#   console.log('Done Searching', results)
+#
+# # Search a single path
+# searcher.searchPath /text/gi, '/Some/path', (result) ->
+#   console.log('Done Searching', result)
+# ```
+#
+# A results from line 10 (1 based) are in the following format:
+#
+# ```js
+# {
+#   "path": "/Some/path",
+#   "matches": [{
+#     "matchText": "Text",
+#     "lineText": "Text in this file!",
+#     "lineTextOffset": 0,
+#     "range": [[9, 0], [9, 4]]
+#   }]
+# }
+# ```
+#
+# ## Events
+#
+# * `results-found` Fired when searching for a each path has been completed
+#    and matches were found.
+#   * `results` {Object} in the result format:
+#     ```js
+#     {
+#       "path": "/Some/path.txt",
+#       "matches": [{
+#         "matchText": "Text",
+#         "lineText": "Text in this file!",
+#         "lineTextOffset": 0,
+#         "range": [[9, 0], [9, 4]]
+#       }]
+#     }
+#     ```
+# * `results-not-found` Fired when searching for a path has finished and _no_
+#    matches were found.
+#   * `filePath` path to the file nothing was found in `"/Some/path.txt"`
+# * `file-error` Fired when an error occurred when searching a file. Happens
+#    for example when a file cannot be opened.
+#   * `error` {Error} object
+#
 module.exports =
 class PathSearcher extends EventEmitter
 
+  # Public: Construct a {PathSearcher} object.
+  #
+  # * `options` {Object}
+  #   * `maxLineLength` {Number} default `100`; The max length of the `lineText`
+  #      component in a results object. `lineText` is the context around the matched text.
+  #   * `wordBreakRegex` {RegExp} default `/[ \r\n\t;:?=&\/]/`;
+  #      Used to break on a word when finding the context for a match.
   constructor: ({@maxLineLength, @wordBreakRegex}={}) ->
     @maxLineLength ?= MAX_LINE_LENGTH
     @wordBreakRegex ?= WORD_BREAK_REGEX
 
+  ###
+  Section: Searching
+  ###
+
+  # Public: Search an array of paths.
+  #
+  # Will search with a {ChunkedExecutor} so as not to immediately exhaust all
+  # the available file descriptors. The {ChunkedExecutor} will execute 20 paths
+  # concurrently.
+  #
+  # * `regex` {RegExp} search pattern
+  # * `paths` {Array} of {String} file paths to search
+  # * `doneCallback` called when searching the entire array of paths has finished
+  #   * `results` {Array} of Result objects in the format specified above;
+  #      null when there are no results
+  #   * `errors` {Array} of errors; null when there are no errors. Errors will
+  #      be js Error objects with `message`, `stack`, etc.
   searchPaths: (regex, paths, doneCallback) ->
     errors = null
     results = null
@@ -35,6 +125,14 @@ class PathSearcher extends EventEmitter
 
     new ChunkedExecutor(paths, searchPath).execute -> doneCallback(results, errors)
 
+  # Public: Search a file path for a regex
+  #
+  # * `regex` {RegExp} search pattern
+  # * `filePath` {String} file path to search
+  # * `doneCallback` called when searching the entire array of paths has finished
+  #   * `results` {Array} of Result objects in the format specified above;
+  #      null when there are no results
+  #   * `error` {Error}; null when there is no error
   searchPath: (regex, filePath, doneCallback) ->
     matches = null
     lineNumber = 0
@@ -61,6 +159,8 @@ class PathSearcher extends EventEmitter
     catch e
       error = e
       @emit('file-error', e)
+
+    return
 
   searchLine: (regex, line, lineNumber) ->
     matches = null
@@ -105,12 +205,9 @@ class PathSearcher extends EventEmitter
         lineTextLength = lineTextEndOffset - lineTextOffset
         lineText = line.substr(lineTextOffset, lineTextLength)
 
+      range = [[lineNumber, matchIndex], [lineNumber, matchEndIndex]]
       matches ?= []
-      matches.push
-        matchText: matchText
-        lineText: lineText
-        lineTextOffset: lineTextOffset
-        range: [[lineNumber, matchIndex], [lineNumber, matchEndIndex]]
+      matches.push {matchText, lineText, lineTextOffset, range}
 
     regex.lastIndex = 0
     matches

@@ -2,6 +2,7 @@
 GitUtils = require 'git-utils'
 path = require 'path'
 
+# Public: {PathFilter} makes testing for path inclusion easy.
 module.exports =
 class PathFilter
   @MINIMATCH_OPTIONS: { matchBase: true, dot: true, flipNegate: true }
@@ -9,6 +10,17 @@ class PathFilter
   @escapeRegExp: (str) ->
     str.replace(/([\/'*+?|()\[\]{}.\^$])/g, '\\$1')
 
+  # Public: Construct a {PathFilter}
+  #
+  # * `rootPath` {String} top level directory to scan. eg. `/Users/ben/somedir`
+  # * `options` {Object} options hash
+  #   * `excludeVcsIgnores` {Boolean}; default false; true to exclude paths
+  #      defined in a .gitignore. Uses git-utils to check ignred files.
+  #   * `inclusions` {Array} of patterns to include. Uses minimatch with a couple
+  #      additions: `['dirname']` and `['dirname/']` will match all paths in
+  #      directory dirname.
+  #   * `exclusions` {Array} of patterns to exclude. Same matcher as inclusions.
+  #   * `includeHidden` {Boolean} default false; true includes hidden files
   constructor: (rootPath, {inclusions, exclusions, includeHidden, excludeVcsIgnores}={}) ->
     @inclusions = @createMatchers(inclusions, true)
     @exclusions = @createMatchers(exclusions, false)
@@ -17,9 +29,25 @@ class PathFilter
 
     @excludeHidden() if includeHidden != true
 
+  ###
+  Section: Testing For Acceptance
+  ###
+
+  # Public: Test if the `filepath` is accepted as a file based on the
+  # constructing options.
+  #
+  # * `filepath` {String} path to a file. File should be a file and should exist
+  #
+  # Returns {Boolean} true if the file is accepted
   isFileAccepted: (filepath) ->
     @isPathAccepted('directory', filepath) and @isPathAccepted('file', filepath)
 
+  # Public: Test if the `filepath` is accepted as a directory based on the
+  # constructing options.
+  #
+  # * `filepath` {String} path to a directory. File should be a directory and should exist
+  #
+  # Returns {Boolean} true if the directory is accepted
   isDirectoryAccepted: (filepath) ->
     @isPathAccepted('directory', filepath)
 
@@ -27,6 +55,10 @@ class PathFilter
     # when explicit inclusion, we dont care about the exclusions
     return true if @inclusions[fileOrDirectory].length and @isPathIncluded(fileOrDirectory, filepath)
     !@isPathIgnored(fileOrDirectory, filepath) && @isPathIncluded(fileOrDirectory, filepath)
+
+  ###
+  Section: Private Methods
+  ###
 
   isPathIgnored: (fileOrDirectory, filepath) ->
     return true if @repo?.isIgnored(@repo.relativize(filepath))

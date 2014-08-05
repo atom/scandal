@@ -6,15 +6,57 @@ PathFilter = require("./path-filter")
 
 DIR_SEP = path.sep
 
+# Public: Scans a directory and emits events when paths matching input options
+# have been found.
+#
+# Note: `PathScanner` keeps no state. You must consume paths via the {::path-found} event.
+#
+# ## Examples
+#
+# ```coffee
+# {PathScanner} = require 'scandal'
+# scanner = new PathScanner('/Users/me/myDopeProject', includeHidden: false)
+#
+# scanner.on 'path-found', (path) ->
+#   console.log(path)
+#
+# scanner.on 'finished-scanning', ->
+#   console.log('All done!')
+#
+# scanner.scan()
+# ```
+#
+# ## Events
+#
+# * `path-found` Emit when a path has been found
+#   * `pathName` {String} name of the path
+# * `finished-scanning` Emit when the scanner is finished
+#
 module.exports =
 class PathScanner extends EventEmitter
 
+  # Public: Create a {PathScanner} object.
+  #
+  # * `rootPath` {String} top level directory to scan. eg. `/Users/ben/somedir`
+  # * `options` {Object} options hash
+  #   * `excludeVcsIgnores` {Boolean}; default false; true to exclude paths
+  #      defined in a .gitignore. Uses git-utils to check ignred files.
+  #   * `inclusions` {Array} of patterns to include. Uses minimatch with a couple
+  #      additions: `['dirname']` and `['dirname/']` will match all paths in
+  #      directory dirname.
+  #   * `exclusions` {Array} of patterns to exclude. Same matcher as inclusions.
+  #   * `includeHidden` {Boolean} default false; true includes hidden files
   constructor: (@rootPath, @options={}) ->
     @asyncCallsInProgress = 0
     @rootPath = path.resolve(@rootPath)
     @rootPathLength = @rootPath.length
     @pathFilter = new PathFilter(@rootPath, @options)
 
+  ###
+  Section: Searching
+  ###
+
+  # Public: Begin the scan
   scan: ->
     @readDir(@rootPath)
 
@@ -52,7 +94,6 @@ class PathScanner extends EventEmitter
       @readDir(filePath)
 
   stat: (filePath) ->
-
     # lstat is SLOW, but what other way to determine if something is a directory or file ?
     # also, sync is about 200ms faster than async...
     stat = fs.lstatSync(filePath)
