@@ -53,7 +53,7 @@ class PathScanner extends EventEmitter
     @pathFilter = new PathFilter(@rootPath, @options)
 
   ###
-  Section: Searching
+  Section: Scanning
   ###
 
   # Public: Begin the scan
