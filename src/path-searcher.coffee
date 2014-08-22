@@ -55,26 +55,34 @@ TRAILING_LINE_END_REGEX = /\r?\n?$/
 #
 # ## Events
 #
-# * `results-found` Fired when searching for a each path has been completed
-#    and matches were found.
-#   * `results` {Object} in the result format:
-#     ```js
-#     {
-#       "path": "/Some/path.txt",
-#       "matches": [{
-#         "matchText": "Text",
-#         "lineText": "Text in this file!",
-#         "lineTextOffset": 0,
-#         "range": [[9, 0], [9, 4]]
-#       }]
-#     }
-#     ```
-# * `results-not-found` Fired when searching for a path has finished and _no_
-#    matches were found.
-#   * `filePath` path to the file nothing was found in `"/Some/path.txt"`
-# * `file-error` Fired when an error occurred when searching a file. Happens
-#    for example when a file cannot be opened.
-#   * `error` {Error} object
+# ### results-found
+#
+# Fired when searching for a each path has been completed and matches were found.
+#
+# * `results` {Object} in the result format:
+#   ```js
+#   {
+#     "path": "/Some/path.txt",
+#     "matches": [{
+#       "matchText": "Text",
+#       "lineText": "Text in this file!",
+#       "lineTextOffset": 0,
+#       "range": [[9, 0], [9, 4]]
+#     }]
+#   }
+#   ```
+#
+# ### results-not-found
+#
+# Fired when searching for a path has finished and _no_ matches were found.
+#
+# * `filePath` path to the file nothing was found in `"/Some/path.txt"`
+#
+# ### file-error
+#
+# Fired when an error occurred when searching a file. Happens for example when a file cannot be opened.
+#
+# * `error` {Error} object
 #
 module.exports =
 class PathSearcher extends EventEmitter
