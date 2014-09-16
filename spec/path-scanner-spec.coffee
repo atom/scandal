@@ -107,6 +107,23 @@ describe "PathScanner", ->
               expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
         )(dir)
 
+    describe "excluding file paths with the not operator", ->
+      it "lists only paths specified by file pattern", ->
+        scanner = new PathScanner(rootPath, inclusions: ['!*.js'])
+        scanner.on('path-found', pathHandler = createPathCollector())
+        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+        runs ->
+          scanner.scan()
+
+        waitsFor ->
+          finishedHandler.callCount > 0
+
+        runs ->
+          expect(paths).not.toContain path.join(rootPath, 'newdir', 'deep_dir.js')
+          expect(paths).not.toContain path.join(rootPath, 'sample.js')
+          expect(paths).toContain path.join(rootPath, 'sample.txt')
+
   describe "with a git repo", ->
     beforeEach ->
       rootPath = fs.realpathSync("spec/fixtures/git")
