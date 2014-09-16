@@ -5,7 +5,7 @@ path = require 'path'
 # Public: {PathFilter} makes testing for path inclusion easy.
 module.exports =
 class PathFilter
-  @MINIMATCH_OPTIONS: { matchBase: true, dot: true, flipNegate: true }
+  @MINIMATCH_OPTIONS: { matchBase: true, dot: true }
 
   @escapeRegExp: (str) ->
     str.replace(/([\/'*+?|()\[\]{}.\^$])/g, '\\$1')
