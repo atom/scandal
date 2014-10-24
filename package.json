@@ -29,7 +29,7 @@
     "minimatch": "0.2.13",
     "git-utils": "^2.1",
     "argparse": "~0.1",
-    "isbinaryfile": "~2.0.1",
+    "isbinaryfile": "~2.0.2",
     "split": "~0.2"
   },
   "devDependencies": {
