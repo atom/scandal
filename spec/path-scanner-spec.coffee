@@ -18,8 +18,8 @@ describe "PathScanner", ->
     beforeEach ->
       rootPath = fs.realpathSync("spec/fixtures/many-files")
 
-    it 'lists all non-hidden files', ->
-      scanner = new PathScanner(rootPath)
+    it 'lists all non-hidden files with symlink follow', ->
+      scanner = new PathScanner(rootPath, follow: true)
       scanner.on('path-found', pathHandler = createPathCollector())
       scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
