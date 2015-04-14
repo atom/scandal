@@ -99,7 +99,7 @@ class PathScanner extends EventEmitter
     stat = fs.lstatSync(filePath)
 
     if @options.follow and stat.isSymbolicLink()
-      if fs.realpathSync(filePath).search(@rootPath) is 0
+      if @isInternalSymlink(filePath)
         return null
       try
         stat = fs.statSync(filePath)
@@ -107,6 +107,14 @@ class PathScanner extends EventEmitter
         return null
 
     stat
+
+  isInternalSymlink: (filePath) ->
+    realPath = null
+    try
+      realPath = fs.realpathSync(filePath)
+    catch error
+      ; # ignore
+    realPath?.search(@rootPath) is 0
 
   asyncCallStarting: ->
     @asyncCallsInProgress++
