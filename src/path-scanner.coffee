@@ -99,6 +99,8 @@ class PathScanner extends EventEmitter
     stat = fs.lstatSync(filePath)
 
     if @options.follow and stat.isSymbolicLink()
+      if fs.realpathSync(filePath).search(@rootPath) is 0
+        return null
       try
         stat = fs.statSync(filePath)
       catch e
