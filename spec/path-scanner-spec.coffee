@@ -41,6 +41,8 @@ describe "PathScanner", ->
 
         expect(paths).toContain path.join(rootPath, 'file1.txt')
         expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
+        expect(paths).not.toContain path.join(rootPath, 'symlink-to-directory', 'file7_ignorable.rb')
+        expect(paths).not.toContain path.join(rootPath, 'symlink-to-file1.txt')
 
     describe "including file paths", ->
       it "lists only paths specified by file pattern", ->
