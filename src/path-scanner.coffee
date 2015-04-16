@@ -48,6 +48,7 @@ class PathScanner extends EventEmitter
   #   * `includeHidden` {Boolean} default false; true includes hidden files
   constructor: (@rootPath, @options={}) ->
     @asyncCallsInProgress = 0
+    @realPathCache = {}
     @rootPath = path.resolve(@rootPath)
     @rootPathLength = @rootPath.length
     @pathFilter = new PathFilter(@rootPath, @options)
@@ -111,7 +112,7 @@ class PathScanner extends EventEmitter
   isInternalSymlink: (filePath) ->
     realPath = null
     try
-      realPath = fs.realpathSync(filePath)
+      realPath = fs.realpathSync(filePath, @realPathCache)
     catch error
       ; # ignore
     realPath?.search(@rootPath) is 0
