@@ -30,7 +30,8 @@
     "git-utils": "^3.0.0",
     "argparse": "~0.1",
     "isbinaryfile": "~2.0.2",
-    "split": "~0.2"
+    "split": "~0.2",
+    "temp": "~0.7.0"
   },
   "devDependencies": {
     "jasmine-focused": "1.x",
@@ -39,7 +40,6 @@
     "grunt": "~0.4.1",
     "grunt-shell": "~0.2.2",
     "grunt-coffeelint": "0.0.6",
-    "temp": "~0.7.0",
     "rimraf": "~2.1.4",
     "wrench": "~1.5.4"
   }
