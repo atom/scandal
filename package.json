@@ -31,7 +31,7 @@
     "argparse": "~0.1",
     "isbinaryfile": "~2.0.2",
     "split": "~0.2",
-    "temp": "~0.7.0"
+    "temp": "~0.8.1"
   },
   "devDependencies": {
     "jasmine-focused": "1.x",
