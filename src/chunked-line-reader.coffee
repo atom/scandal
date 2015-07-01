@@ -27,7 +27,7 @@ class ChunkedLineReader extends Readable
   @chunkedBuffer: null
   @headerBuffer: new Buffer(256)
 
-  constructor: (@filePath) ->
+  constructor: (@filePath, @encoding = "utf8") ->
     super()
 
   isBinaryFile: ->
@@ -48,7 +48,7 @@ class ChunkedLineReader extends Readable
       @constructor.chunkedBuffer ?= new Buffer(chunkSize)
       chunkedBuffer = @constructor.chunkedBuffer
       bytesRead = fs.readSync(fd, chunkedBuffer, 0, chunkSize, 0)
-      decoder = new StringDecoder('utf8')
+      decoder = new StringDecoder(@encoding)
 
       while bytesRead
         # Scary looking. Uses very few new objects
