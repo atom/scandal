@@ -1,6 +1,7 @@
 fs = require("fs")
 isBinaryFile = require("isbinaryfile")
 {Readable} = require 'stream'
+{StringDecoder} = require 'string_decoder'
 
 lastIndexOf = (buffer, length, char) ->
   i = length
@@ -26,7 +27,7 @@ class ChunkedLineReader extends Readable
   @chunkedBuffer: null
   @headerBuffer: new Buffer(256)
 
-  constructor: (@filePath) ->
+  constructor: (@filePath, @encoding = "utf8") ->
     super()
 
   isBinaryFile: ->
@@ -47,6 +48,7 @@ class ChunkedLineReader extends Readable
       @constructor.chunkedBuffer ?= new Buffer(chunkSize)
       chunkedBuffer = @constructor.chunkedBuffer
       bytesRead = fs.readSync(fd, chunkedBuffer, 0, chunkSize, 0)
+      decoder = new StringDecoder(@encoding)
 
       while bytesRead
         # Scary looking. Uses very few new objects
@@ -55,15 +57,15 @@ class ChunkedLineReader extends Readable
 
         if index < 0
           # no newlines here, the whole thing is a remainder
-          newRemainder = chunkedBuffer.toString("utf8", 0, bytesRead)
+          newRemainder = decoder.write(chunkedBuffer.slice(0, bytesRead))
           str = null
         else if index > -1 and index == bytesRead - 1
           # the last char is a newline
           newRemainder = ''
-          str = chunkedBuffer.toString("utf8", 0, bytesRead)
+          str = decoder.write(chunkedBuffer.slice(0, bytesRead))
         else
-          newRemainder = chunkedBuffer.toString("utf8", index+1, bytesRead)
-          str = chunkedBuffer.toString("utf8", 0, index+1)
+          str = decoder.write(chunkedBuffer.slice(0, index+1))
+          newRemainder = decoder.write(chunkedBuffer.slice(index+1, bytesRead))
 
         if str
           str = remainder + str if remainder
