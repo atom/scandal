@@ -27,7 +27,8 @@ class ChunkedLineReader extends Readable
   @chunkedBuffer: null
   @headerBuffer: new Buffer(256)
 
-  constructor: (@filePath, @encoding = "utf8") ->
+  constructor: (@filePath, options) ->
+    @encoding = options?.encoding ? "utf8"
     super()
 
   isBinaryFile: ->

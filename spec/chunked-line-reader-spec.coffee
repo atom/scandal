@@ -132,9 +132,8 @@ describe "ChunkedLineReader", ->
       for line, i in allLines
         expect(line).toEqual sample[i]
 
-  it "works with multibyte characters", ->
+  it "works with multibyte characters in utf8", ->
     rootPath = fs.realpathSync("spec/fixtures/many-files/file7_multibyte.txt")
-
     reader = new ChunkedLineReader(rootPath)
     reader.on 'end', endHandler = jasmine.createSpy('end handler')
 
@@ -150,6 +149,7 @@ describe "ChunkedLineReader", ->
       sampleText = fs.readFileSync(rootPath, encoding: 'utf8')
       sampleLines = sampleText.trim().split("\n")
 
+      expect(reader.encoding).toBe 'utf8'
       expect(allLines.length).toEqual sampleLines.length
       for line, i in allLines
         expect(line).toEqual sampleLines[i]
