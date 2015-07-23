@@ -1,4 +1,3 @@
-_ = require 'underscore'
 {ArgumentParser} = require 'argparse'
 PathSearcher = require './path-searcher'
 PathScanner = require './path-scanner'

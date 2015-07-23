@@ -25,8 +25,7 @@
     "isbinaryfile": "^2.0.4",
     "minimatch": "^2.0.9",
     "split": "^0.2.10",
-    "temp": "^0.8.3",
-    "underscore": "~1.5.1"
+    "temp": "^0.8.3"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
