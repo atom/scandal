@@ -1,4 +1,3 @@
-_ = require 'underscore'
 {ArgumentParser} = require 'argparse'
 PathSearcher = require './path-searcher'
 PathScanner = require './path-scanner'
@@ -22,7 +21,6 @@ main = ->
     addHelp: true
     description: 'List paths, search, and replace in a directory'
 
-  argParser.addArgument([ '-m', '--multiprocess' ], action: 'storeTrue')
   argParser.addArgument([ '-e', '--excludeVcsIgnores' ], action: 'storeTrue')
   argParser.addArgument([ '-o', '--verbose' ], action: 'storeTrue')
   argParser.addArgument([ '-d', '--dryReplace' ], action: 'storeTrue')
@@ -35,10 +33,7 @@ main = ->
   if options.search and options.replace
     singleProcessReplaceMain(options)
   else if options.search
-    if options.multiprocess
-      require('./multi-process-search').searchMain(options)
-    else
-      singleProcessSearchMain(options)
+    singleProcessSearchMain(options)
   else
     singleProcessScanMain(options)
 

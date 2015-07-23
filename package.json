@@ -1,7 +1,7 @@
 {
   "name": "scandal",
   "version": "2.0.5",
-  "description": "Directory Scan Utilities",
+  "description": "Directory Search and Scan Utilities",
   "main": "./lib/scandal.js",
   "bin": {
     "scandal": "./bin/scandal"
@@ -20,22 +20,21 @@
   },
   "homepage": "http://atom.github.io/scandal",
   "dependencies": {
-    "underscore": "~1.5.1",
-    "minimatch": "0.2.13",
-    "git-utils": "^3.0.0",
-    "argparse": "~0.1",
-    "isbinaryfile": "~2.0.2",
-    "split": "~0.2",
-    "temp": "~0.8.1"
+    "argparse": "^0.1.16",
+    "git-utils": "^3.0.1",
+    "isbinaryfile": "^2.0.4",
+    "minimatch": "^2.0.9",
+    "split": "^0.2.10",
+    "temp": "^0.8.3"
   },
   "devDependencies": {
-    "jasmine-focused": "1.x",
-    "grunt-contrib-coffee": "~0.7.0",
-    "grunt-cli": "~0.1.8",
-    "grunt": "~0.4.1",
-    "grunt-shell": "~0.2.2",
-    "grunt-coffeelint": "0.0.6",
-    "rimraf": "~2.1.4",
-    "wrench": "~1.5.4"
+    "grunt": "^0.4.5",
+    "grunt-cli": "^0.1.13",
+    "grunt-coffeelint": "0.0.13",
+    "grunt-contrib-coffee": "^0.13.0",
+    "grunt-shell": "^1.1.2",
+    "jasmine-focused": "^1.0.7",
+    "rimraf": "^2.4.2",
+    "wrench": "^1.5.8"
   }
 }

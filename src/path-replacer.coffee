@@ -1,4 +1,3 @@
-_ = require 'underscore'
 fs = require 'fs'
 temp = require('temp').track()
 {EventEmitter} = require 'events'

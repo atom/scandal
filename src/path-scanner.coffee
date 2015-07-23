@@ -1,4 +1,3 @@
-_ = require("underscore")
 fs = require("fs")
 path = require("path")
 {EventEmitter} = require("events")
