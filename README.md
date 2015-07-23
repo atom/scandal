@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/atom/scandal.svg?branch=master)](https://travis-ci.org/atom/scandal)
 
-scandal provides two utilities:
+`scandal` provides two utilities:
 
 * Scanning a directory for paths matching a set of glob inclusions or exclusions. For example, you want to find a list of paths to search that match a certain pattern, but are not ignored by the `.gitignore`.
 
@@ -16,11 +16,11 @@ It is written to be simple, flexible and efficient. Scandal does the minimum.
 
 We want to provide modules to combine in any way you'd like. Want to scan in one process and search in another? You can do that.
 
-To be clear, scandal is not a CLI. It can be used from the terminal, but in practice it's only used for benchmarking.
+To be clear, scandal is not a CLI. It can be used from the terminal, but in practice the CLI only used for benchmarking.
 
 ## Objects
 
-scandal provides two main modules: `PathScanner` and `PathSearcher`.
+`scandal` provides two main modules: `PathScanner` and `PathSearcher`.
 
 ### PathScanner
 
@@ -39,7 +39,7 @@ scanner.on 'finished-scanning', ->
 scanner.scan()
 ```
 
-`PathScanner` keeps no state. You must consume paths via the 'path-found' event.
+`PathScanner` keeps no state. You must consume paths via the `path-found` event.
 
 #### options
 

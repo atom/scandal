@@ -1,7 +1,7 @@
 {
   "name": "scandal",
   "version": "2.0.5",
-  "description": "Directory Scan Utilities",
+  "description": "Directory Search and Scan Utilities",
   "main": "./lib/scandal.js",
   "bin": {
     "scandal": "./bin/scandal"
