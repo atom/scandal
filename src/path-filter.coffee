@@ -62,7 +62,8 @@ class PathFilter
     return true if @inclusions['directory']?.length && @isPathIncluded('directory', filepath)
 
     @isPathIncluded('directory', filepath) &&
-    !@isPathGloballyExcluded('directory', filepath)
+    !@isPathGloballyExcluded('directory', filepath) &&
+    !@isPathExcludedByGit(filepath)
 
   isPathAccepted: (fileOrDirectory, filepath) ->
     !@isPathExcluded(fileOrDirectory, filepath) &&
@@ -83,7 +84,6 @@ class PathFilter
     return false
 
   isPathExcluded: (fileOrDirectory, filepath) ->
-    return true if @repo?.isIgnored(@repo.relativize(filepath))
     exclusions = @exclusions[fileOrDirectory]
     return false unless exclusions?.length
 
@@ -93,13 +93,14 @@ class PathFilter
     return false
 
   isPathGloballyExcluded: (fileOrDirectory, filepath) ->
-    return true if @repo?.isIgnored(@repo.relativize(filepath))
-
     exclusions = @globalExclusions[fileOrDirectory]
     index = exclusions.length
     while index--
       return true if (exclusions[index].match(filepath))
     return false
+
+  isPathExcludedByGit: (filepath) ->
+    @repo?.isIgnored(@repo.relativize(filepath))
 
   sanitizePaths: (options) ->
     return options unless options.inclusions?.length
