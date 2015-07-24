@@ -23,15 +23,9 @@ describe "PathScanner", ->
       scanner.on('path-found', pathHandler = createPathCollector())
       scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
-      runs ->
-        scanner.scan()
-
-      waitsFor ->
-        pathHandler.callCount > 0
-
-      waitsFor ->
-        finishedHandler.callCount > 0
-
+      runs -> scanner.scan()
+      waitsFor -> pathHandler.callCount > 0
+      waitsFor -> finishedHandler.callCount > 0
       runs ->
         # symlink-to-file1.txt is a file on windows
         if process.platform is 'win32'
@@ -50,12 +44,8 @@ describe "PathScanner", ->
         scanner.on('path-found', pathHandler = createPathCollector())
         scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
-        runs ->
-          scanner.scan()
-
-        waitsFor ->
-          finishedHandler.callCount > 0
-
+        runs -> scanner.scan()
+        waitsFor -> finishedHandler.callCount > 0
         runs ->
           expect(paths.length).toBe 4
           expect(paths).toContain path.join(rootPath, 'newdir', 'deep_dir.js')
@@ -66,12 +56,8 @@ describe "PathScanner", ->
         scanner.on('path-found', pathHandler = createPathCollector())
         scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
-        runs ->
-          scanner.scan()
-
-        waitsFor ->
-          finishedHandler.callCount > 0
-
+        runs -> scanner.scan()
+        waitsFor -> finishedHandler.callCount > 0
         runs ->
           expect(paths).toContain path.join(rootPath, '.root', 'subdir', '.realhidden')
           expect(paths).toContain path.join(rootPath, '.root', 'subdir', 'file1.txt')
@@ -239,12 +225,8 @@ describe "PathScanner", ->
       scanner.on('path-found', pathHandler = createPathCollector())
       scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
-      runs ->
-        scanner.scan()
-
-      waitsFor ->
-        finishedHandler.callCount > 0
-
+      runs -> scanner.scan()
+      waitsFor -> finishedHandler.callCount > 0
       runs ->
         expect(paths.length).toBe 2
         expect(paths).not.toContain path.join(rootPath, 'ignored.txt')
@@ -254,12 +236,8 @@ describe "PathScanner", ->
       scanner.on('path-found', pathHandler = createPathCollector())
       scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
-      runs ->
-        scanner.scan()
-
-      waitsFor ->
-        finishedHandler.callCount > 0
-
+      runs -> scanner.scan()
+      waitsFor -> finishedHandler.callCount > 0
       runs ->
         expect(paths.length).toBe 4
         expect(paths).toContain path.join(rootPath, 'ignored.txt')
@@ -269,12 +247,8 @@ describe "PathScanner", ->
       scanner.on('path-found', pathHandler = createPathCollector())
       scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
-      runs ->
-        scanner.scan()
-
-      waitsFor ->
-        finishedHandler.callCount > 0
-
+      runs -> scanner.scan()
+      waitsFor -> finishedHandler.callCount > 0
       runs ->
         expect(paths.length).toBe 1
         expect(paths).toContain path.join(rootPath, 'node_modules', 'pkg', 'sample.js')
@@ -284,12 +258,8 @@ describe "PathScanner", ->
       scanner.on('path-found', pathHandler = createPathCollector())
       scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
-      runs ->
-        scanner.scan()
-
-      waitsFor ->
-        finishedHandler.callCount > 0
-
+      runs -> scanner.scan()
+      waitsFor -> finishedHandler.callCount > 0
       runs ->
         expect(paths.length).toBe 1
         expect(paths).toContain path.join(rootPath, 'node_modules', 'pkg', 'sample.js')
@@ -299,12 +269,8 @@ describe "PathScanner", ->
       scanner.on('path-found', pathHandler = createPathCollector())
       scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
-      runs ->
-        scanner.scan()
-
-      waitsFor ->
-        finishedHandler.callCount > 0
-
+      runs -> scanner.scan()
+      waitsFor -> finishedHandler.callCount > 0
       runs ->
         expect(paths.length).toBe 3
         expect(paths).toContain path.join(rootPath, '.gitignore')
@@ -314,12 +280,8 @@ describe "PathScanner", ->
       scanner.on('path-found', pathHandler = createPathCollector())
       scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
-      runs ->
-        scanner.scan()
-
-      waitsFor ->
-        finishedHandler.callCount > 0
-
+      runs -> scanner.scan()
+      waitsFor -> finishedHandler.callCount > 0
       runs ->
         expect(paths).not.toContain path.join(rootPath, '.git/HEAD')
 
@@ -328,11 +290,7 @@ describe "PathScanner", ->
       scanner.on('path-found', pathHandler = createPathCollector())
       scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
-      runs ->
-        scanner.scan()
-
-      waitsFor ->
-        finishedHandler.callCount > 0
-
+      runs -> scanner.scan()
+      waitsFor -> finishedHandler.callCount > 0
       runs ->
         expect(paths).not.toContain path.join(rootPath, '.gitignore')
