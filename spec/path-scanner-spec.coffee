@@ -61,20 +61,6 @@ describe "PathScanner", ->
           expect(paths).toContain path.join(rootPath, 'newdir', 'deep_dir.js')
           expect(paths).toContain path.join(rootPath, 'sample.js')
 
-      it "explicit inclusions override exclusions", ->
-        scanner = new PathScanner(rootPath, inclusions: ['dir'], exclusions: ['dir'])
-        scanner.on('path-found', pathHandler = createPathCollector())
-        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
-
-        runs ->
-          scanner.scan()
-
-        waitsFor ->
-          finishedHandler.callCount > 0
-
-        runs ->
-          expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
-
       it "lists only paths specified by a deep dir", ->
         scanner = new PathScanner(rootPath, inclusions: [path.join('.root', 'subdir')+path.sep], includeHidden: true)
         scanner.on('path-found', pathHandler = createPathCollector())
@@ -87,6 +73,7 @@ describe "PathScanner", ->
           finishedHandler.callCount > 0
 
         runs ->
+          expect(paths).toContain path.join(rootPath, '.root', 'subdir', '.realhidden')
           expect(paths).toContain path.join(rootPath, '.root', 'subdir', 'file1.txt')
           expect(paths).not.toContain path.join(rootPath, '.root', 'file3.txt')
 
@@ -109,22 +96,132 @@ describe "PathScanner", ->
               expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
         )(dir)
 
-    describe "excluding file paths with the not operator", ->
-      it "lists only paths specified by file pattern", ->
+    describe "excluding file paths", ->
+      it "excludes paths matching the globalExclusions paths", ->
+        scanner = new PathScanner(rootPath, globalExclusions: ['dir'])
+        scanner.on('path-found', pathHandler = createPathCollector())
+        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+        runs -> scanner.scan()
+        waitsFor -> finishedHandler.callCount > 0
+        runs ->
+          expect(paths).not.toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
+
+      it "excludes paths matching negated patterns in `inclusions`", ->
         scanner = new PathScanner(rootPath, inclusions: ['!*.js'])
         scanner.on('path-found', pathHandler = createPathCollector())
         scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
 
-        runs ->
-          scanner.scan()
-
-        waitsFor ->
-          finishedHandler.callCount > 0
-
+        runs -> scanner.scan()
+        waitsFor -> finishedHandler.callCount > 0
         runs ->
           expect(paths).not.toContain path.join(rootPath, 'newdir', 'deep_dir.js')
           expect(paths).not.toContain path.join(rootPath, 'sample.js')
           expect(paths).toContain path.join(rootPath, 'sample.txt')
+
+      it "local directory inclusions override global directory exclusions", ->
+        scanner = new PathScanner(rootPath, inclusions: ['dir'], globalExclusions: ['dir'])
+        scanner.on('path-found', pathHandler = createPathCollector())
+        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+        runs -> scanner.scan()
+        waitsFor -> finishedHandler.callCount > 0
+        runs ->
+          expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
+
+      it "local file inclusions override global file exclusions", ->
+        scanner = new PathScanner(rootPath, inclusions: ['*.txt'], globalExclusions: ['*.txt', '.root' + path.sep])
+        scanner.on('path-found', pathHandler = createPathCollector())
+        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+        runs -> scanner.scan()
+        waitsFor -> finishedHandler.callCount > 0
+        runs ->
+          expect(paths).toContain path.join(rootPath, 'file1.txt')
+          expect(paths).not.toContain path.join(rootPath, 'file4_noext')
+          expect(paths).not.toContain path.join(rootPath, '.root', 'file3.txt')
+          expect(paths).not.toContain path.join(rootPath, '.root', 'subdir', 'file1.txt')
+
+      it "correctly matches local inclusions and exclusions", ->
+        scanner = new PathScanner(rootPath, inclusions: ['file*', '!*.txt'])
+        scanner.on('path-found', pathHandler = createPathCollector())
+        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+        runs -> scanner.scan()
+        waitsFor -> finishedHandler.callCount > 0
+        runs ->
+          expect(paths).toContain path.join(rootPath, 'file4_noext')
+          expect(paths).toContain path.join(rootPath, 'file5_not_really_image.gif')
+          expect(paths).not.toContain path.join(rootPath, 'file1.txt')
+          expect(paths).not.toContain path.join(rootPath, 'file2.txt')
+          expect(paths).not.toContain path.join(rootPath, 'file3.txt')
+          expect(paths).not.toContain path.join(rootPath, 'file7_multibyte.txt')
+          expect(paths).not.toContain path.join(rootPath, 'sample.js')
+          expect(paths).not.toContain path.join(rootPath, 'sample.txt')
+
+      it "correctly matches local inclusions and global excluded files", ->
+        scanner = new PathScanner(rootPath, inclusions: ['file*'],  globalExclusions: ['*.txt'])
+        scanner.on('path-found', pathHandler = createPathCollector())
+        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+        runs -> scanner.scan()
+        waitsFor -> finishedHandler.callCount > 0
+        runs ->
+          expect(paths).toContain path.join(rootPath, 'file4_noext')
+          expect(paths).toContain path.join(rootPath, 'file5_not_really_image.gif')
+          expect(paths).not.toContain path.join(rootPath, 'file1.txt')
+          expect(paths).not.toContain path.join(rootPath, 'file2.txt')
+          expect(paths).not.toContain path.join(rootPath, 'file3.txt')
+          expect(paths).not.toContain path.join(rootPath, 'file7_multibyte.txt')
+          expect(paths).not.toContain path.join(rootPath, 'sample.js')
+          expect(paths).not.toContain path.join(rootPath, 'sample.txt')
+
+      it "correctly matches local included files and global excluded dirs", ->
+        subdir = path.join('.root', 'subdir')+path.sep
+        scanner = new PathScanner(rootPath, inclusions: ['file*.txt'],  globalExclusions: [subdir])
+        scanner.on('path-found', pathHandler = createPathCollector())
+        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+        runs -> scanner.scan()
+        waitsFor -> finishedHandler.callCount > 0
+        runs ->
+          expect(paths).toContain path.join(rootPath, 'file1.txt')
+          expect(paths).toContain path.join(rootPath, 'file2.txt')
+          expect(paths).toContain path.join(rootPath, 'file7_multibyte.txt')
+          expect(paths).not.toContain path.join(rootPath, 'file4_noext')
+          expect(paths).not.toContain path.join(rootPath, 'file5_not_really_image.gif')
+          expect(paths).not.toContain path.join(rootPath, '.root', 'subdir', 'file1.txt')
+          expect(paths).not.toContain path.join(rootPath, 'sample.js')
+          expect(paths).not.toContain path.join(rootPath, 'sample.txt')
+
+      it "correctly matches local included files and global excluded dirs", ->
+        subdir = path.join('.root', 'subdir')+path.sep
+        scanner = new PathScanner(rootPath, inclusions: [subdir],  globalExclusions: [subdir, '*.txt'], includeHidden: true)
+        scanner.on('path-found', pathHandler = createPathCollector())
+        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+        runs -> scanner.scan()
+        waitsFor -> finishedHandler.callCount > 0
+        runs ->
+          expect(paths.length).toBe 1
+          expect(paths).toContain path.join(rootPath, '.root', 'subdir', '.realhidden')
+          expect(paths).not.toContain path.join(rootPath, '.root', 'subdir', 'file1.txt')
+
+      dirs = ['!dir', "!dir#{path.sep}", "!dir#{path.sep}*", "!dir#{path.sep}**"]
+      for dir in dirs
+        ((dir) ->
+          it "lists only paths specified in #{dir}", ->
+            scanner = new PathScanner(rootPath, inclusions: [dir])
+            scanner.on('path-found', pathHandler = createPathCollector())
+            scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+            runs -> scanner.scan()
+            waitsFor -> finishedHandler.callCount > 0
+            runs ->
+              expect(paths.length).toBeGreaterThan 1
+              expect(paths).toContain path.join(rootPath, 'sample.txt')
+              expect(paths).not.toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
+        )(dir)
 
   describe "with a git repo", ->
     beforeEach ->

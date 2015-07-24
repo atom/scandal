@@ -20,10 +20,16 @@ class PathFilter
   #      additions: `['dirname']` and `['dirname/']` will match all paths in
   #      directory dirname.
   #   * `exclusions` {Array} of patterns to exclude. Same matcher as inclusions.
+  #   * `globalExclusions` {Array} of patterns to exclude. These patterns can be
+  #     overridden by `inclusions`. Same matcher as inclusions.
   #   * `includeHidden` {Boolean} default false; true includes hidden files
-  constructor: (rootPath, {inclusions, exclusions, includeHidden, excludeVcsIgnores}={}) ->
-    @inclusions = @createMatchers(inclusions, true)
-    @exclusions = @createMatchers(exclusions, false)
+  constructor: (rootPath, options={}) ->
+    {includeHidden, excludeVcsIgnores} = options
+    {inclusions, exclusions, globalExclusions} = @sanitizePaths(options)
+
+    @inclusions = @createMatchers(inclusions, {deepMatch: true})
+    @exclusions = @createMatchers(exclusions, {deepMatch: false})
+    @globalExclusions = @createMatchers(globalExclusions, {deepMatch: false, disallowDuplicatesFrom: @inclusions})
 
     @repo = GitUtils.open(rootPath) if excludeVcsIgnores
 
@@ -40,7 +46,7 @@ class PathFilter
   #
   # Returns {Boolean} true if the file is accepted
   isFileAccepted: (filepath) ->
-    @isPathAccepted('directory', filepath) and @isPathAccepted('file', filepath)
+    @isDirectoryAccepted(filepath) and @isPathAccepted('file', filepath)
 
   # Public: Test if the `filepath` is accepted as a directory based on the
   # constructing options.
@@ -49,46 +55,75 @@ class PathFilter
   #
   # Returns {Boolean} true if the directory is accepted
   isDirectoryAccepted: (filepath) ->
-    @isPathAccepted('directory', filepath)
+    return false if @isPathExcluded('directory', filepath) is true
+
+    # A matching explicit local inclusion will override the global exclusions
+    # Other than this, the logic is the same between file and directory matching.
+    return true if @inclusions['directory']?.length && @isPathIncluded('directory', filepath)
+
+    @isPathIncluded('directory', filepath) &&
+    !@isPathGloballyExcluded('directory', filepath)
 
   isPathAccepted: (fileOrDirectory, filepath) ->
-    # when explicit inclusion, we dont care about the exclusions
-    return true if @inclusions[fileOrDirectory].length and @isPathIncluded(fileOrDirectory, filepath)
-    !@isPathIgnored(fileOrDirectory, filepath) && @isPathIncluded(fileOrDirectory, filepath)
+    !@isPathExcluded(fileOrDirectory, filepath) &&
+    @isPathIncluded(fileOrDirectory, filepath) &&
+    !@isPathGloballyExcluded(fileOrDirectory, filepath)
 
   ###
   Section: Private Methods
   ###
 
-  isPathIgnored: (fileOrDirectory, filepath) ->
-    return true if @repo?.isIgnored(@repo.relativize(filepath))
-
-    exclusions = @exclusions[fileOrDirectory]
-    r = exclusions.length
-    while r--
-      return true if (exclusions[r].match(filepath))
-    return false
-
   isPathIncluded: (fileOrDirectory, filepath) ->
     inclusions = @inclusions[fileOrDirectory]
-    r = inclusions.length
+    return true unless inclusions?.length
 
-    return true unless r
-
-    while r--
-      return true if inclusions[r].match(filepath)
+    index = inclusions.length
+    while index--
+      return true if inclusions[index].match(filepath)
     return false
+
+  isPathExcluded: (fileOrDirectory, filepath) ->
+    return true if @repo?.isIgnored(@repo.relativize(filepath))
+    exclusions = @exclusions[fileOrDirectory]
+    return false unless exclusions?.length
+
+    index = exclusions.length
+    while index--
+      return true if (exclusions[index].match(filepath))
+    return false
+
+  isPathGloballyExcluded: (fileOrDirectory, filepath) ->
+    return true if @repo?.isIgnored(@repo.relativize(filepath))
+
+    exclusions = @globalExclusions[fileOrDirectory]
+    index = exclusions.length
+    while index--
+      return true if (exclusions[index].match(filepath))
+    return false
+
+  sanitizePaths: (options) ->
+    return options unless options.inclusions?.length
+    inclusions = []
+    for includedPath in options.inclusions
+      if includedPath and includedPath[0] is '!'
+        options.exclusions ?= []
+        options.exclusions.push(includedPath.slice(1))
+      else if includedPath
+        inclusions.push(includedPath)
+    options.inclusions = inclusions
+    options
 
   excludeHidden: ->
     matcher = new Minimatch(".*", PathFilter.MINIMATCH_OPTIONS)
     @exclusions.file.push(matcher)
     @exclusions.directory.push(matcher)
 
-  createMatchers: (patterns=[], deepMatch) ->
-    addFileMatcher = (matchers, pattern) ->
+  createMatchers: (patterns=[], {deepMatch, disallowDuplicatesFrom}={}) ->
+    addFileMatcher = (matchers, pattern) =>
+      return if disallowDuplicatesFrom? and @containsPattern(disallowDuplicatesFrom, 'file', pattern)
       matchers.file.push(new Minimatch(pattern, PathFilter.MINIMATCH_OPTIONS))
 
-    addDirectoryMatcher = (matchers, pattern, deepMatch) ->
+    addDirectoryMatcher = (matchers, pattern, deepMatch) =>
       # It is important that we keep two permutations of directory patterns:
       #
       # * 'directory/anotherdir'
@@ -131,6 +166,7 @@ class PathFilter
       matchIndex = pattern.search(directoryPattern)
       addDirectoryMatcher(matchers, pattern.slice(0, matchIndex)) if matchIndex > -1
 
+      return if disallowDuplicatesFrom? and @containsPattern(disallowDuplicatesFrom, 'directory', pattern)
       matchers.directory.push(new Minimatch(pattern, PathFilter.MINIMATCH_OPTIONS))
 
     pattern = null
@@ -158,3 +194,8 @@ class PathFilter
         addFileMatcher(matchers, pattern)
 
     matchers
+
+  containsPattern: (matchers, fileOrDirectory, pattern) ->
+    for matcher in matchers[fileOrDirectory]
+      return true if matcher.pattern is pattern
+    false
