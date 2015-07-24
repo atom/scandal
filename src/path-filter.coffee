@@ -27,9 +27,9 @@ class PathFilter
     {includeHidden, excludeVcsIgnores} = options
     {inclusions, exclusions, globalExclusions} = @sanitizePaths(options)
 
-    @inclusions = @createMatchers(inclusions, true)
-    @exclusions = @createMatchers(exclusions, false)
-    @globalExclusions = @createMatchers(globalExclusions, false)
+    @inclusions = @createMatchers(inclusions, {deepMatch: true})
+    @exclusions = @createMatchers(exclusions, {deepMatch: false})
+    @globalExclusions = @createMatchers(globalExclusions, {deepMatch: false, disallowDuplicatesFrom: @inclusions})
 
     @repo = GitUtils.open(rootPath) if excludeVcsIgnores
 
@@ -118,11 +118,12 @@ class PathFilter
     @exclusions.file.push(matcher)
     @exclusions.directory.push(matcher)
 
-  createMatchers: (patterns=[], deepMatch) ->
-    addFileMatcher = (matchers, pattern) ->
+  createMatchers: (patterns=[], {deepMatch, disallowDuplicatesFrom}={}) ->
+    addFileMatcher = (matchers, pattern) =>
+      return if disallowDuplicatesFrom? and @containsPattern(disallowDuplicatesFrom, 'file', pattern)
       matchers.file.push(new Minimatch(pattern, PathFilter.MINIMATCH_OPTIONS))
 
-    addDirectoryMatcher = (matchers, pattern, deepMatch) ->
+    addDirectoryMatcher = (matchers, pattern, deepMatch) =>
       # It is important that we keep two permutations of directory patterns:
       #
       # * 'directory/anotherdir'
@@ -165,6 +166,7 @@ class PathFilter
       matchIndex = pattern.search(directoryPattern)
       addDirectoryMatcher(matchers, pattern.slice(0, matchIndex)) if matchIndex > -1
 
+      return if disallowDuplicatesFrom? and @containsPattern(disallowDuplicatesFrom, 'directory', pattern)
       matchers.directory.push(new Minimatch(pattern, PathFilter.MINIMATCH_OPTIONS))
 
     pattern = null
@@ -192,3 +194,8 @@ class PathFilter
         addFileMatcher(matchers, pattern)
 
     matchers
+
+  containsPattern: (matchers, fileOrDirectory, pattern) ->
+    for matcher in matchers[fileOrDirectory]
+      return true if matcher.pattern is pattern
+    false
