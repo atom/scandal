@@ -57,7 +57,7 @@ class PathFilter
   isDirectoryAccepted: (filepath) ->
     return false if @isPathExcluded('directory', filepath) is true
 
-    # An matching explicit local inclusion will override the global exclusions
+    # A matching explicit local inclusion will override the global exclusions
     # Other than this, the logic is the same between file and directory matching.
     return true if @inclusions['directory']?.length && @isPathIncluded('directory', filepath)
 
