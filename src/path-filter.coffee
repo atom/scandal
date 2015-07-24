@@ -21,7 +21,10 @@ class PathFilter
   #      directory dirname.
   #   * `exclusions` {Array} of patterns to exclude. Same matcher as inclusions.
   #   * `includeHidden` {Boolean} default false; true includes hidden files
-  constructor: (rootPath, {inclusions, exclusions, includeHidden, excludeVcsIgnores}={}) ->
+  constructor: (rootPath, options={}) ->
+    {includeHidden, excludeVcsIgnores} = options
+    {inclusions, exclusions, globalExclusions} = @sanitizePaths(options)
+
     @inclusions = @createMatchers(inclusions, true)
     @exclusions = @createMatchers(exclusions, false)
 
@@ -78,6 +81,18 @@ class PathFilter
     while r--
       return true if inclusions[r].match(filepath)
     return false
+
+  sanitizePaths: (options) ->
+    return options unless options.inclusions?.length
+    inclusions = []
+    for includedPath in options.inclusions
+      if includedPath and includedPath[0] is '!'
+        options.exclusions ?= []
+        options.exclusions.push(includedPath.slice(1))
+      else if includedPath
+        inclusions.push(includedPath)
+    options.inclusions = inclusions
+    options
 
   excludeHidden: ->
     matcher = new Minimatch(".*", PathFilter.MINIMATCH_OPTIONS)
