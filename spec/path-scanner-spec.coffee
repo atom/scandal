@@ -249,7 +249,7 @@ describe "PathScanner", ->
         expect(paths.length).toBe 2
         expect(paths).not.toContain path.join(rootPath, 'ignored.txt')
 
-    it "includes files matching .gitignore patterns when excludeVcsIgnores == false", ->
+    it "includes files matching .gitignore patterns when excludeVcsIgnores is false", ->
       scanner = new PathScanner(rootPath, excludeVcsIgnores: false)
       scanner.on('path-found', pathHandler = createPathCollector())
       scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
