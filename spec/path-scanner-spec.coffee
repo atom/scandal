@@ -107,17 +107,7 @@ describe "PathScanner", ->
         runs ->
           expect(paths).not.toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
 
-      it "local inclusions override global exclusions", ->
-        scanner = new PathScanner(rootPath, inclusions: ['dir'], globalExclusions: ['dir'])
-        scanner.on('path-found', pathHandler = createPathCollector())
-        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
-
-        runs -> scanner.scan()
-        waitsFor -> finishedHandler.callCount > 0
-        runs ->
-          expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
-
-      it "lists only paths specified by file pattern", ->
+      it "excludes paths matching negated patterns in `inclusions`", ->
         scanner = new PathScanner(rootPath, inclusions: ['!*.js'])
         scanner.on('path-found', pathHandler = createPathCollector())
         scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
@@ -128,6 +118,29 @@ describe "PathScanner", ->
           expect(paths).not.toContain path.join(rootPath, 'newdir', 'deep_dir.js')
           expect(paths).not.toContain path.join(rootPath, 'sample.js')
           expect(paths).toContain path.join(rootPath, 'sample.txt')
+
+      it "local directory inclusions override global directory exclusions", ->
+        scanner = new PathScanner(rootPath, inclusions: ['dir'], globalExclusions: ['dir'])
+        scanner.on('path-found', pathHandler = createPathCollector())
+        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+        runs -> scanner.scan()
+        waitsFor -> finishedHandler.callCount > 0
+        runs ->
+          expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
+
+      it "local file inclusions override global file exclusions", ->
+        scanner = new PathScanner(rootPath, inclusions: ['*.txt'], globalExclusions: ['*.txt', '.root' + path.sep])
+        scanner.on('path-found', pathHandler = createPathCollector())
+        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+        runs -> scanner.scan()
+        waitsFor -> finishedHandler.callCount > 0
+        runs ->
+          expect(paths).toContain path.join(rootPath, 'file1.txt')
+          expect(paths).not.toContain path.join(rootPath, 'file4_noext')
+          expect(paths).not.toContain path.join(rootPath, '.root', 'file3.txt')
+          expect(paths).not.toContain path.join(rootPath, '.root', 'subdir', 'file1.txt')
 
       it "correctly matches local inclusions and exclusions", ->
         scanner = new PathScanner(rootPath, inclusions: ['file*', '!*.txt'])
