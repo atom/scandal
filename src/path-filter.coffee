@@ -20,6 +20,8 @@ class PathFilter
   #      additions: `['dirname']` and `['dirname/']` will match all paths in
   #      directory dirname.
   #   * `exclusions` {Array} of patterns to exclude. Same matcher as inclusions.
+  #   * `globalExclusions` {Array} of patterns to exclude. These patterns can be
+  #     overridden by `inclusions`. Same matcher as inclusions.
   #   * `includeHidden` {Boolean} default false; true includes hidden files
   constructor: (rootPath, options={}) ->
     {includeHidden, excludeVcsIgnores} = options
