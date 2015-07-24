@@ -279,6 +279,21 @@ describe "PathScanner", ->
         expect(paths.length).toBe 1
         expect(paths).toContain path.join(rootPath, 'node_modules', 'pkg', 'sample.js')
 
+    it "includes files in a git-excluded dir when overridden by `inclusions` when excludeVcsIgnores is true", ->
+      scanner = new PathScanner(rootPath, excludeVcsIgnores: true, inclusions: ['node_modules'])
+      scanner.on('path-found', pathHandler = createPathCollector())
+      scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+      runs ->
+        scanner.scan()
+
+      waitsFor ->
+        finishedHandler.callCount > 0
+
+      runs ->
+        expect(paths.length).toBe 1
+        expect(paths).toContain path.join(rootPath, 'node_modules', 'pkg', 'sample.js')
+
     it "lists hidden files with showHidden == true", ->
       scanner = new PathScanner(rootPath, excludeVcsIgnores: true, includeHidden: true)
       scanner.on('path-found', pathHandler = createPathCollector())
