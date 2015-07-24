@@ -27,6 +27,7 @@ class PathFilter
 
     @inclusions = @createMatchers(inclusions, true)
     @exclusions = @createMatchers(exclusions, false)
+    @globalExclusions = @createMatchers(globalExclusions, false)
 
     @repo = GitUtils.open(rootPath) if excludeVcsIgnores
 
@@ -43,7 +44,7 @@ class PathFilter
   #
   # Returns {Boolean} true if the file is accepted
   isFileAccepted: (filepath) ->
-    @isPathAccepted('directory', filepath) and @isPathAccepted('file', filepath)
+    @isDirectoryAccepted(filepath) and @isPathAccepted('file', filepath)
 
   # Public: Test if the `filepath` is accepted as a directory based on the
   # constructing options.
@@ -52,34 +53,50 @@ class PathFilter
   #
   # Returns {Boolean} true if the directory is accepted
   isDirectoryAccepted: (filepath) ->
-    @isPathAccepted('directory', filepath)
+    return false if @isPathExcluded('directory', filepath) is true
+
+    # An matching explicit local inclusion will override the global exclusions
+    # Other than this, the logic is the same between file and directory matching.
+    return true if @inclusions['directory']?.length && @isPathIncluded('directory', filepath)
+
+    @isPathIncluded('directory', filepath) &&
+    !@isPathGloballyExcluded('directory', filepath)
 
   isPathAccepted: (fileOrDirectory, filepath) ->
-    # when explicit inclusion, we dont care about the exclusions
-    return true if @inclusions[fileOrDirectory].length and @isPathIncluded(fileOrDirectory, filepath)
-    !@isPathIgnored(fileOrDirectory, filepath) && @isPathIncluded(fileOrDirectory, filepath)
+    !@isPathExcluded(fileOrDirectory, filepath) &&
+    @isPathIncluded(fileOrDirectory, filepath) &&
+    !@isPathGloballyExcluded(fileOrDirectory, filepath)
 
   ###
   Section: Private Methods
   ###
 
-  isPathIgnored: (fileOrDirectory, filepath) ->
-    return true if @repo?.isIgnored(@repo.relativize(filepath))
-
-    exclusions = @exclusions[fileOrDirectory]
-    r = exclusions.length
-    while r--
-      return true if (exclusions[r].match(filepath))
-    return false
-
   isPathIncluded: (fileOrDirectory, filepath) ->
     inclusions = @inclusions[fileOrDirectory]
-    r = inclusions.length
+    return true unless inclusions?.length
 
-    return true unless r
+    index = inclusions.length
+    while index--
+      return true if inclusions[index].match(filepath)
+    return false
 
-    while r--
-      return true if inclusions[r].match(filepath)
+  isPathExcluded: (fileOrDirectory, filepath) ->
+    return true if @repo?.isIgnored(@repo.relativize(filepath))
+    exclusions = @exclusions[fileOrDirectory]
+    return false unless exclusions?.length
+
+    index = exclusions.length
+    while index--
+      return true if (exclusions[index].match(filepath))
+    return false
+
+  isPathGloballyExcluded: (fileOrDirectory, filepath) ->
+    return true if @repo?.isIgnored(@repo.relativize(filepath))
+
+    exclusions = @globalExclusions[fileOrDirectory]
+    index = exclusions.length
+    while index--
+      return true if (exclusions[index].match(filepath))
     return false
 
   sanitizePaths: (options) ->
