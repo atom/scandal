@@ -24,7 +24,7 @@
     "git-utils": "^3.0.1",
     "isbinaryfile": "^2.0.4",
     "minimatch": "^2.0.9",
-    "split": "^0.2.10",
+    "split": "^1.0.0",
     "temp": "^0.8.3"
   },
   "devDependencies": {
