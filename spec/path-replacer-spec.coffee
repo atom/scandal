@@ -8,7 +8,7 @@ describe "PathReplacer", ->
 
   beforeEach ->
     replacer = new PathReplacer()
-    rootPath = fs.realpathSync("spec/fixtures/many-files")
+    rootPath = fs.realpathSync(path.join("spec", "fixtures", "many-files"))
 
   describe "replacePath()", ->
     describe "when a file doesnt exist", ->

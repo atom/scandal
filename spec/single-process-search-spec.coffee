@@ -10,7 +10,7 @@ describe "search", ->
   [scanner, searcher, rootPath] = []
 
   beforeEach ->
-    rootPath = fs.realpathSync("spec/fixtures/many-files")
+    rootPath = fs.realpathSync(path.join("spec", "fixtures", "many-files"))
     scanner = new PathScanner(rootPath)
     searcher = new PathSearcher()
 
@@ -53,7 +53,7 @@ describe "replace", ->
   [scanner, replacer, rootPath] = []
 
   beforeEach ->
-    rootPath = fs.realpathSync("spec/fixtures/many-files")
+    rootPath = fs.realpathSync(path.join("spec", "fixtures", "many-files"))
     scanner = new PathScanner(rootPath)
     replacer = new PathReplacer()
 

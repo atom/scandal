@@ -8,7 +8,7 @@ describe "PathSearcher", ->
 
   beforeEach ->
     searcher = new PathSearcher()
-    rootPath = fs.realpathSync("spec/fixtures/many-files")
+    rootPath = fs.realpathSync(path.join("spec", "fixtures", "many-files"))
 
   describe "findWordBreak()", ->
     it "finds the first index", ->
@@ -163,7 +163,7 @@ describe "PathSearcher", ->
     filePaths = null
 
     beforeEach ->
-      rootPath = fs.realpathSync("spec/fixtures/git")
+      rootPath = fs.realpathSync(path.join("spec", "fixtures", "git"))
       filePaths = [
         path.join(rootPath, 'file.txt')
         path.join(rootPath, 'other.txt')

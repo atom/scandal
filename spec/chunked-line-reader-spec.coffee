@@ -30,7 +30,7 @@ describe "ChunkedLineReader", ->
       expect(dataHandler).not.toHaveBeenCalled()
 
   it "works with no newline at the end", ->
-    rootPath = fs.realpathSync("spec/fixtures/many-files/sample.js")
+    rootPath = fs.realpathSync(path.join("spec", "fixtures", "many-files", "sample.js"))
     reader = new ChunkedLineReader(rootPath)
     reader.on 'end', endHandler = jasmine.createSpy('end handler')
 
@@ -64,7 +64,7 @@ describe "ChunkedLineReader", ->
         expect(line).toEqual sample[i]
 
   it "works with newline at the end", ->
-    rootPath = fs.realpathSync("spec/fixtures/many-files/sample-end-newline.js")
+    rootPath = fs.realpathSync(path.join("spec", "fixtures", "many-files", "sample-end-newline.js"))
     reader = new ChunkedLineReader(rootPath)
     reader.on 'end', endHandler = jasmine.createSpy('end handler')
 
@@ -98,7 +98,7 @@ describe "ChunkedLineReader", ->
         expect(line).toEqual sample[i]
 
   it "works with windows newlines at the end", ->
-    rootPath = fs.realpathSync("spec/fixtures/many-files/sample-with-windows-line-endings.js")
+    rootPath = fs.realpathSync(path.join("spec", "fixtures", "many-files", "sample-with-windows-line-endings.js"))
 
     reader = new ChunkedLineReader(rootPath)
     reader.on 'end', endHandler = jasmine.createSpy('end handler')
@@ -133,7 +133,7 @@ describe "ChunkedLineReader", ->
         expect(line).toEqual sample[i]
 
   it "works with multibyte characters in utf8", ->
-    rootPath = fs.realpathSync("spec/fixtures/many-files/file7_multibyte.txt")
+    rootPath = fs.realpathSync(path.join("spec", "fixtures", "many-files", "file7_multibyte.txt"))
     reader = new ChunkedLineReader(rootPath)
     reader.on 'end', endHandler = jasmine.createSpy('end handler')
 

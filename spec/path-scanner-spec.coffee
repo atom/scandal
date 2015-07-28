@@ -16,7 +16,7 @@ describe "PathScanner", ->
 
   describe "a non-git directory with many files", ->
     beforeEach ->
-      rootPath = fs.realpathSync("spec/fixtures/many-files")
+      rootPath = fs.realpathSync(path.join('spec', 'fixtures', 'many-files'))
 
     it 'lists all non-hidden files with symlink follow', ->
       scanner = new PathScanner(rootPath, follow: true)
@@ -211,7 +211,7 @@ describe "PathScanner", ->
 
   describe "with a git repo", ->
     beforeEach ->
-      rootPath = fs.realpathSync("spec/fixtures/git")
+      rootPath = fs.realpathSync(path.join('spec', 'fixtures', 'git'))
       wrench.copyDirSyncRecursive(path.join(rootPath, 'git.git'), path.join(rootPath, '.git'))
       wrench.rmdirSyncRecursive(path.join(rootPath, 'git.git'))
       fs.writeFileSync(path.join(rootPath, 'ignored.txt'), "This must be added in the spec because the file can't be checked in!")
@@ -283,7 +283,7 @@ describe "PathScanner", ->
       runs -> scanner.scan()
       waitsFor -> finishedHandler.callCount > 0
       runs ->
-        expect(paths).not.toContain path.join(rootPath, '.git/HEAD')
+        expect(paths).not.toContain path.join(rootPath, '.git', 'HEAD')
 
     it "can ignore hidden files even though it is treated as a directory", ->
       scanner = new PathScanner(rootPath, exclusions: ['.gitignore'], excludeVcsIgnores: false, includeHidden: true)
