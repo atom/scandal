@@ -1,6 +1,7 @@
 {Minimatch} = require 'minimatch'
 GitUtils = require 'git-utils'
 path = require 'path'
+fs = require 'fs'
 
 # Public: {PathFilter} makes testing for path inclusion easy.
 module.exports =
@@ -23,7 +24,7 @@ class PathFilter
   #   * `globalExclusions` {Array} of patterns to exclude. These patterns can be
   #     overridden by `inclusions`. Same matcher as inclusions.
   #   * `includeHidden` {Boolean} default false; true includes hidden files
-  constructor: (rootPath, options={}) ->
+  constructor: (@rootPath, options={}) ->
     {includeHidden, excludeVcsIgnores} = options
     {inclusions, exclusions, globalExclusions} = @sanitizePaths(options)
 
@@ -31,7 +32,7 @@ class PathFilter
     @exclusions = @createMatchers(exclusions, {deepMatch: false})
     @globalExclusions = @createMatchers(globalExclusions, {deepMatch: false, disallowDuplicatesFrom: @inclusions})
 
-    @repo = GitUtils.open(rootPath) if excludeVcsIgnores
+    @repo = GitUtils.open(@rootPath) if excludeVcsIgnores
 
     @excludeHidden() if includeHidden != true
 
@@ -184,13 +185,21 @@ class PathFilter
         #{'\\'+path.sep}$|   # Pattern ends in a separator
         #{'\\'+path.sep}\**$ # Pattern ends with a seperator followed by a *
       ///
-      if (endsWithSeparatorOrStar.test(pattern))
+      if endsWithSeparatorOrStar.test(pattern)
         # Is a dir if it ends in a '/' or '/*'
         addDirectoryMatcher(matchers, pattern, deepMatch)
-      else if (pattern.indexOf('.') < 1 && pattern.indexOf('*') < 0)
-        # If no extension and no '*', assume it's a dir.
-        # Also assumes hidden patterns like '.git' are directories.
-        addDirectoryMatcher(matchers, pattern + path.sep + '**', deepMatch)
+      else if pattern.indexOf('*') < 0
+
+        try
+          # Try our best to check if it's a directory
+          stat = fs.statSync(path.join(@rootPath, pattern))
+        catch e
+          stat = null
+
+        if stat?.isFile()
+          addFileMatcher(matchers, pattern)
+        else
+          addDirectoryMatcher(matchers, pattern + path.sep + '**', deepMatch)
       else
         addFileMatcher(matchers, pattern)
 

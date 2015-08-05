@@ -51,6 +51,27 @@ describe "PathScanner", ->
           expect(paths).toContain path.join(rootPath, 'newdir', 'deep_dir.js')
           expect(paths).toContain path.join(rootPath, 'sample.js')
 
+      it "lists paths in a specified directory that contains dots", ->
+        scanner = new PathScanner(rootPath, inclusions: ['dir.with.dots'])
+        scanner.on('path-found', pathHandler = createPathCollector())
+        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+        runs -> scanner.scan()
+        waitsFor -> finishedHandler.callCount > 0
+        runs ->
+          expect(paths.length).toBe 1
+          expect(paths).toContain path.join(rootPath, 'dir.with.dots', 'parent-has-dots.txt')
+
+      it "returns nothing when a non-existant directory is passed in", ->
+        scanner = new PathScanner(rootPath, inclusions: ['thisdoesntexist'])
+        scanner.on('path-found', pathHandler = createPathCollector())
+        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+        runs -> scanner.scan()
+        waitsFor -> finishedHandler.callCount > 0
+        runs ->
+          expect(paths.length).toBe 0
+
       it "lists only paths specified by a deep dir", ->
         scanner = new PathScanner(rootPath, inclusions: [path.join('.root', 'subdir')+path.sep], includeHidden: true)
         scanner.on('path-found', pathHandler = createPathCollector())
