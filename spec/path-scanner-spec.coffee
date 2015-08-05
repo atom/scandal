@@ -62,7 +62,7 @@ describe "PathScanner", ->
           expect(paths.length).toBe 1
           expect(paths).toContain path.join(rootPath, 'dir.with.dots', 'parent-has-dots.txt')
 
-      it "returns nothing when a non-existant directory is passed in", ->
+      it "returns nothing when a non-existent directory is passed in", ->
         scanner = new PathScanner(rootPath, inclusions: ['thisdoesntexist'])
         scanner.on('path-found', pathHandler = createPathCollector())
         scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
