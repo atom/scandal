@@ -21,7 +21,7 @@
   "homepage": "http://atom.github.io/scandal",
   "dependencies": {
     "argparse": "^1.0.2",
-    "git-utils": "^3.0.1",
+    "git-utils": "^4.0",
     "isbinaryfile": "^2.0.4",
     "minimatch": "^2.0.9",
     "split": "^1.0.0",
