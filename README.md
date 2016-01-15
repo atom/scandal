@@ -93,7 +93,7 @@ A third object, `PathFilter` is available, but intended for use by the `PathScan
 
 ## Using the scanner and searcher together
 
-If you dont want to think about combining the `PathScanner` and `PathSearcher` in your own way, a `search` is function provided.
+If you dont want to think about combining the `PathScanner` and `PathSearcher` in your own way, a `search` function is provided.
 
 ```coffeescript
 {search, PathScanner, PathSearcher} = require 'scandal'
