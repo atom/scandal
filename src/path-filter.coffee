@@ -1,5 +1,4 @@
 {Minimatch} = require 'minimatch'
-GitUtils = require 'git-utils'
 path = require 'path'
 fs = require 'fs'
 
@@ -32,7 +31,7 @@ class PathFilter
     @exclusions = @createMatchers(exclusions, {deepMatch: false})
     @globalExclusions = @createMatchers(globalExclusions, {deepMatch: false, disallowDuplicatesFrom: @inclusions})
 
-    @repo = GitUtils.open(@rootPath) if excludeVcsIgnores
+    @repo = require('git-utils').open(@rootPath) if excludeVcsIgnores
 
     @excludeHidden() if includeHidden != true
 
