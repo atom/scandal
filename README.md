@@ -44,7 +44,7 @@ scanner.scan()
 
 #### options
 
-* _excludeVcsIgnores_ - bool; default false; true to exclude paths defined in a .gitignore. Uses [git-utils](http://atom.github.io/git-utils/) to check ignred files.
+* _excludeVcsIgnores_ - bool; default false; true to exclude paths defined in a .gitignore. Uses [git-utils](http://atom.github.io/git-utils/) to check ignored files.
 * _inclusions_ - list of patterns to include. Uses [minimatch](https://github.com/isaacs/minimatch) with a couple additions: `['dirname']` and `['dirname/']` will match all paths in direcotry `dirname`
 * _exclusions_ - list of patterns to exclude. Same matcher as `inclusions`.
 * _includeHidden_ - bool; default false; true includes hidden files.
