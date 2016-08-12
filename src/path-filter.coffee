@@ -57,14 +57,13 @@ class PathFilter
   # Returns {Boolean} true if the directory is accepted
   isDirectoryAccepted: (filepath) ->
     return false if @isPathExcluded('directory', filepath) is true
+    return false if @isPathGloballyExcluded('directory', filepath) is true
 
-    # A matching explicit local inclusion will override the global exclusions
+    # A matching explicit local inclusion will override any Git exclusions
     # Other than this, the logic is the same between file and directory matching.
     return true if @inclusions['directory']?.length && @isPathIncluded('directory', filepath)
 
-    @isPathIncluded('directory', filepath) &&
-    !@isPathGloballyExcluded('directory', filepath) &&
-    !@isPathExcludedByGit(filepath)
+    @isPathIncluded('directory', filepath) && !@isPathExcludedByGit(filepath)
 
   isPathAccepted: (fileOrDirectory, filepath) ->
     !@isPathExcluded(fileOrDirectory, filepath) &&
