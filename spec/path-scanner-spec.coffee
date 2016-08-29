@@ -126,7 +126,7 @@ describe "PathScanner", ->
           expect(paths).not.toContain path.join(rootPath, 'sample.js')
           expect(paths).toContain path.join(rootPath, 'sample.txt')
 
-      it "local directory inclusions override global directory exclusions", ->
+      it "allows a local directory inclusion to override a matching global exclusion", ->
         scanner = new PathScanner(rootPath, inclusions: ['dir'], globalExclusions: ['dir'])
         scanner.on('path-found', pathHandler = createPathCollector())
         scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
@@ -136,7 +136,7 @@ describe "PathScanner", ->
         runs ->
           expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
 
-      it "local directory inclusions don't override global subdirectory exclusions", ->
+      it "doesn't allow a local directory inclusion to override a global exclusion of a subdirectory", ->
         scanner = new PathScanner(rootPath, inclusions: ['newdir'], globalExclusions: ['seconddir'])
         scanner.on('path-found', pathHandler = createPathCollector())
         scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
@@ -147,7 +147,7 @@ describe "PathScanner", ->
           expect(paths).toContain path.join(rootPath, 'newdir', 'deep_dir.js')
           expect(paths).not.toContain path.join(rootPath, 'newdir', 'seconddir', 'very_deep_dir.js')
 
-      it "local file inclusions override global file exclusions", ->
+      it "allows a local file inclusion to override a global file exclusion", ->
         scanner = new PathScanner(rootPath, inclusions: ['*.txt'], globalExclusions: ['*.txt', '.root' + path.sep])
         scanner.on('path-found', pathHandler = createPathCollector())
         scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
