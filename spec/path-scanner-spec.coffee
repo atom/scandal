@@ -147,6 +147,18 @@ describe "PathScanner", ->
           expect(paths).toContain path.join(rootPath, 'newdir', 'deep_dir.js')
           expect(paths).not.toContain path.join(rootPath, 'newdir', 'seconddir', 'very_deep_dir.js')
 
+      it "allows a local inclusion of a subdirectory to override a global directory exclusion", ->
+        scanner = new PathScanner(rootPath, inclusions: ['newdir/seconddir'], globalExclusions: ['newdir'])
+        scanner.on('path-found', pathHandler = createPathCollector())
+        scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+        runs -> scanner.scan()
+        waitsFor -> finishedHandler.callCount > 0
+        runs ->
+          expect(paths.length).toBe 1
+          expect(paths).not.toContain path.join(rootPath, 'newdir', 'deep_dir.js')
+          expect(paths).toContain path.join(rootPath, 'newdir', 'seconddir', 'very_deep_dir.js')
+
       it "allows a local file inclusion to override a global file exclusion", ->
         scanner = new PathScanner(rootPath, inclusions: ['*.txt'], globalExclusions: ['*.txt', '.root' + path.sep])
         scanner.on('path-found', pathHandler = createPathCollector())
