@@ -14,18 +14,20 @@ describe "ChunkedLineReader", ->
     ChunkedLineReader.CHUNK_SIZE = chunkSize
     ChunkedLineReader.chunkedBuffer = null
 
-  it "throws an error when the file does not exist", ->
+  it "emits an error when the file does not exist", ->
     dataHandler = jasmine.createSpy('data handler')
 
     reader = new ChunkedLineReader('/this-does-not-exist.js')
     reader.on 'end', endHandler = jasmine.createSpy('end handler')
+    reader.on 'error', errorHandler = jasmine.createSpy('error handler')
 
-    expect( -> reader.on 'data', dataHandler ).toThrow()
+    reader.on 'data', dataHandler
 
     waitsFor ->
-      endHandler.callCount > 0
+      errorHandler.callCount > 0
 
     runs ->
+      expect(errorHandler).toHaveBeenCalled()
       expect(endHandler).toHaveBeenCalled()
       expect(dataHandler).not.toHaveBeenCalled()
 

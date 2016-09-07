@@ -146,6 +146,10 @@ class PathSearcher extends EventEmitter
     reader = new ChunkedLineReader(filePath)
     error = null
 
+    reader.on 'error', (e) =>
+      error = e
+      @emit('file-error', error)
+
     reader.on 'end', =>
       if matches?.length
         output = {filePath, matches}
@@ -154,18 +158,15 @@ class PathSearcher extends EventEmitter
         @emit('results-not-found', filePath)
       doneCallback(output, error)
 
-    try
-      reader.on 'data', (chunk) =>
-        lines = chunk.toString().replace(TRAILING_LINE_END_REGEX, '').split(LINE_END_REGEX)
-        for line in lines
-          lineMatches = @searchLine(regex, line, lineNumber++)
+    reader.on 'data', (chunk) =>
+      lines = chunk.toString().replace(TRAILING_LINE_END_REGEX, '').split(LINE_END_REGEX)
+      for line in lines
+        lineMatches = @searchLine(regex, line, lineNumber++)
 
-          if lineMatches?
-            matches ?= []
-            matches.push(match) for match in lineMatches
-    catch e
-      error = e
-      @emit('file-error', e)
+        if lineMatches?
+          matches ?= []
+          matches.push(match) for match in lineMatches
+
 
     return
 

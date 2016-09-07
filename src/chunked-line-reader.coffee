@@ -80,6 +80,9 @@ class ChunkedLineReader extends Readable
 
       @push(remainder) if remainder
 
+    catch error
+      @emit('error', error)
+
     finally
       fs.closeSync(fd) if fd?
       @push(null)
