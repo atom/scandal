@@ -28,6 +28,7 @@
     "temp": "^0.8.3"
   },
   "devDependencies": {
+    "coffeelint": "^1.15.7",
     "grunt": "^0.4.5",
     "grunt-cli": "^0.1.13",
     "grunt-coffeelint": "0.0.13",
