@@ -22,7 +22,8 @@ class PathFilter
   #      directory dirname.
   #   * `exclusions` {Array} of patterns to exclude. Same matcher as inclusions.
   #   * `globalExclusions` {Array} of patterns to exclude. These patterns can be
-  #     overridden by `inclusions`. Same matcher as inclusions.
+  #      overridden by `inclusions` if the inclusion is a duplicate or a
+  #      subdirectory of the exclusion. Same matcher as inclusions.
   #   * `includeHidden` {Boolean} default false; true includes hidden files
   constructor: (@rootPath, options={}) ->
     {includeHidden, excludeVcsIgnores} = options
@@ -47,61 +48,104 @@ class PathFilter
   #
   # Returns {Boolean} true if the file is accepted
   isFileAccepted: (filepath) ->
-    @isDirectoryAccepted(filepath) and @isPathAccepted('file', filepath)
+    @isDirectoryAccepted(filepath) and
+      !@isPathExcluded('file', filepath) and
+      @isPathIncluded('file', filepath) and
+      !@isPathGloballyExcluded('file', filepath)
 
   # Public: Test if the `filepath` is accepted as a directory based on the
   # constructing options.
   #
-  # * `filepath` {String} path to a directory. File should be a directory and should exist
+  # * `filepath` {String} path to a directory. File should be a file or directory
+  #   and should exist
   #
   # Returns {Boolean} true if the directory is accepted
   isDirectoryAccepted: (filepath) ->
     return false if @isPathExcluded('directory', filepath) is true
 
-    # A matching explicit local inclusion will override the global exclusions
-    # Other than this, the logic is the same between file and directory matching.
-    return true if @inclusions['directory']?.length && @isPathIncluded('directory', filepath)
+    matchingInclusions = @getMatchingItems(@inclusions['directory'], filepath)
 
-    @isPathIncluded('directory', filepath) &&
-    !@isPathGloballyExcluded('directory', filepath) &&
+    # Matching global exclusions will be overriden if there is a matching
+    # inclusion for a subdirectory of the exclusion.
+    # For example: if node_modules is globally excluded but mode_modules/foo is
+    # explicitly included, then the global exclusion is overridden for
+    # node_modules/foo
+    matchingGlobalExclusions = @overrideGlobalExclusions(
+      @getMatchingItems(@globalExclusions['directory'], filepath), matchingInclusions)
+
+    # Don't accept if there's a matching global exclusion
+    return false if matchingGlobalExclusions.length
+
+    # A matching explicit local inclusion will override any Git exclusions
+    return true if matchingInclusions.length
+
+    # Don't accept if there Were inclusions specified that didn't match
+    return false if @inclusions['directory']?.length
+
+    # Finally, check for Git exclusions
     !@isPathExcludedByGit(filepath)
 
-  isPathAccepted: (fileOrDirectory, filepath) ->
-    !@isPathExcluded(fileOrDirectory, filepath) &&
-    @isPathIncluded(fileOrDirectory, filepath) &&
-    !@isPathGloballyExcluded(fileOrDirectory, filepath)
 
   ###
   Section: Private Methods
   ###
 
   isPathIncluded: (fileOrDirectory, filepath) ->
-    inclusions = @inclusions[fileOrDirectory]
-    return true unless inclusions?.length
-
-    index = inclusions.length
-    while index--
-      return true if inclusions[index].match(filepath)
-    return false
+    return true unless @inclusions[fileOrDirectory]?.length
+    return @getMatchingItems(@inclusions[fileOrDirectory], filepath,
+                             stopAfterFirst=true)?.length > 0
 
   isPathExcluded: (fileOrDirectory, filepath) ->
-    exclusions = @exclusions[fileOrDirectory]
-    return false unless exclusions?.length
-
-    index = exclusions.length
-    while index--
-      return true if (exclusions[index].match(filepath))
-    return false
+    return @getMatchingItems(@exclusions[fileOrDirectory], filepath,
+                             stopAfterFirst=true)?.length > 0
 
   isPathGloballyExcluded: (fileOrDirectory, filepath) ->
-    exclusions = @globalExclusions[fileOrDirectory]
-    index = exclusions.length
+    return @getMatchingItems(@globalExclusions[fileOrDirectory], filepath,
+                             stopAfterFirst=true)?.length > 0
+
+  # Given an array of `matchers`, return an array containing only those that
+  # match `filepath`.
+  getMatchingItems: (matchers, filepath, stopAfterFirst=false) ->
+    index = matchers.length
+    result = []
     while index--
-      return true if (exclusions[index].match(filepath))
-    return false
+      if matchers[index].match(filepath)
+        result.push(matchers[index])
+        return result if stopAfterFirst
+    return result
 
   isPathExcludedByGit: (filepath) ->
     @repo?.isIgnored(@repo.relativize(filepath))
+
+  # Given an array of `globalExclusions`, filter out any which have an
+  # `inclusion` defined for a subdirectory
+  overrideGlobalExclusions: (globalExclusions, inclusions) ->
+    result = []
+    exclusionIndex = globalExclusions.length
+    while exclusionIndex--
+      inclusionIndex = inclusions.length
+      requiresOverride = false
+
+      # Check if an inclusion is specified for a subdirectory of this globalExclusion
+      while inclusionIndex--
+        if @isSubpathMatcher(globalExclusions[exclusionIndex], inclusions[inclusionIndex])
+          requiresOverride = true
+
+      result.push(globalExclusions[exclusionIndex]) if !requiresOverride
+    return result
+
+  # Returns true if the `child` matcher is a subdirectory of the `parent` matcher
+  isSubpathMatcher: (parent, child) ->
+    # Strip off trailing wildcards from the parent pattern
+    parentPattern = parent.pattern
+    directoryPattern = ///
+      #{'\\'+path.sep}\*$|   # Matcher ends with a separator followed by *
+      #{'\\'+path.sep}\*\*$  # Matcher ends with a separator followed by **
+    ///
+    matchIndex = parentPattern.search(directoryPattern)
+    parentPattern = parentPattern.slice(0, matchIndex) if matchIndex > -1
+
+    return child.pattern.substr(0, parentPattern.length) == parentPattern
 
   sanitizePaths: (options) ->
     return options unless options.inclusions?.length
