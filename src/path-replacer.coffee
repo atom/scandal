@@ -73,8 +73,8 @@ class PathReplacer extends EventEmitter
         @emit('file-error', error)
         doneCallback(null, error)
 
-    try
-      reader.pipe(replacer).pipe(output)
-    catch error
+    reader.on 'error', (error) =>
       @emit('file-error', error)
       doneCallback(null, error)
+
+    reader.pipe(replacer).pipe(output)
