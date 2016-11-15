@@ -115,7 +115,7 @@ class PathFilter
     return result
 
   isPathExcludedByGit: (filepath) ->
-    @repo?.isIgnored(@repo.relativize(filepath))
+    @repo?.isIgnored(@repo.relativize(path.join(@rootPath, filepath)))
 
   # Given an array of `globalExclusions`, filter out any which have an
   # `inclusion` defined for a subdirectory
