@@ -254,11 +254,14 @@ describe "PathScanner", ->
         )(dir)
 
   describe "with a git repo", ->
+    subDirPath = null
     beforeEach ->
       rootPath = fs.realpathSync(path.join('spec', 'fixtures', 'git'))
+      subDirPath = fs.realpathSync(path.join(rootPath, 'src'))
       wrench.copyDirSyncRecursive(path.join(rootPath, 'git.git'), path.join(rootPath, '.git'))
       wrench.rmdirSyncRecursive(path.join(rootPath, 'git.git'))
       fs.writeFileSync(path.join(rootPath, 'ignored.txt'), "This must be added in the spec because the file can't be checked in!")
+      fs.writeFileSync(path.join(rootPath, 'src', 'ignored.txt'), "This must be added in the spec because the file can't be checked in!")
 
     afterEach ->
       wrench.copyDirSyncRecursive(path.join(rootPath, '.git'), path.join(rootPath, 'git.git'))
@@ -272,7 +275,7 @@ describe "PathScanner", ->
       runs -> scanner.scan()
       waitsFor -> finishedHandler.callCount > 0
       runs ->
-        expect(paths.length).toBe 2
+        expect(paths.length).toBe 4
         expect(paths).not.toContain path.join(rootPath, 'ignored.txt')
 
     it "includes files matching .gitignore patterns when excludeVcsIgnores is false", ->
@@ -283,7 +286,7 @@ describe "PathScanner", ->
       runs -> scanner.scan()
       waitsFor -> finishedHandler.callCount > 0
       runs ->
-        expect(paths.length).toBe 4
+        expect(paths.length).toBe 8
         expect(paths).toContain path.join(rootPath, 'ignored.txt')
 
     it "includes files deep in an included dir", ->
@@ -316,7 +319,7 @@ describe "PathScanner", ->
       runs -> scanner.scan()
       waitsFor -> finishedHandler.callCount > 0
       runs ->
-        expect(paths.length).toBe 3
+        expect(paths.length).toBe 6
         expect(paths).toContain path.join(rootPath, '.gitignore')
 
     it "treats hidden file patterns as directories and wont search in hidden directories", ->
@@ -338,3 +341,15 @@ describe "PathScanner", ->
       waitsFor -> finishedHandler.callCount > 0
       runs ->
         expect(paths).not.toContain path.join(rootPath, '.gitignore')
+
+    it "correctly ignores files when searching a subdirectory when excludeVcsIgnores is true", ->
+      scanner = new PathScanner(subDirPath, excludeVcsIgnores: true)
+      scanner.on('path-found', pathHandler = createPathCollector())
+      scanner.on('finished-scanning', finishedHandler = jasmine.createSpy())
+
+      runs -> scanner.scan()
+      waitsFor -> finishedHandler.callCount > 0
+      runs ->
+        expect(paths.length).toBe 2
+        expect(paths).toContain path.join(subDirPath, 'file.txt')
+        expect(paths).toNotContain path.join(subDirPath, 'ignored.txt')
