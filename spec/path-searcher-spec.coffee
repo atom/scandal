@@ -129,9 +129,65 @@ describe "PathSearcher", ->
           expect(results.filePath).toBe filePath
           expect(results.matches.length).toBe 6
 
-          expect(results.matches[0].lineText).toBe '  var sort = function(items) {'
+          expect(results.matches[0].lineText).toBe '  var sort = function(items) {  # followed by a pretty long comment which is used to check the maxLineLength'
           expect(results.matches[0].matchText).toBe 'items'
           expect(results.matches[0].range).toEqual [[1, 22], [1, 27]]
+          expect(results.matches[0].linesBefore.length).toBe 0
+          expect(results.matches[0].linesAfter.length).toBe 0
+
+      it "finds matches with context lines in a file", ->
+        searcher = new PathSearcher({lineCountBefore: 2, lineCountAfter: 3})
+        searcher.on('results-found', resultsHandler = jasmine.createSpy())
+        searcher.searchPath(/\)/gi, filePath, finishedHandler = jasmine.createSpy())
+
+        waitsFor ->
+          finishedHandler.callCount > 0
+
+        runs ->
+          expect(resultsHandler.callCount).toBe 1
+
+          results = resultsHandler.mostRecentCall.args[0]
+          expect(results.filePath).toBe filePath
+          expect(results.matches.length).toBe 14
+
+          expect(results.matches[0].lineText).toBe 'var quicksort = function () {'
+          expect(results.matches[0].matchText).toBe ')'
+          expect(results.matches[0].range).toEqual [[0, 26], [0, 27]]
+          expect(results.matches[0].linesBefore.length).toBe 0
+          expect(results.matches[0].linesAfter.length).toBe 3
+          expect(results.matches[0].linesAfter[0]).toBe '  var sort = function(items) {  # followed by a pretty long comment which is used to check the maxLi'
+          expect(results.matches[0].linesAfter[1]).toBe '    if (items.length <= 1) return items;'
+          expect(results.matches[0].linesAfter[2]).toBe '    var pivot = items.shift(), current, left = [], right = [];'
+
+          expect(results.matches[1].lineText).toBe '  var sort = function(items) {  # followed by a pretty long comment which is used to check the maxLineLength'
+          expect(results.matches[1].matchText).toBe ')'
+          expect(results.matches[1].range).toEqual [[1, 27], [1, 28]]
+          expect(results.matches[1].linesBefore.length).toBe 1
+          expect(results.matches[1].linesBefore[0]).toBe 'var quicksort = function () {'
+          expect(results.matches[1].linesAfter.length).toBe 3
+          expect(results.matches[1].linesAfter[0]).toBe '    if (items.length <= 1) return items;'
+          expect(results.matches[1].linesAfter[1]).toBe '    var pivot = items.shift(), current, left = [], right = [];'
+          expect(results.matches[1].linesAfter[2]).toBe '    while(items.length > 0) {'
+
+          expect(results.matches[2].lineText).toBe '    if (items.length <= 1) return items;'
+          expect(results.matches[2].matchText).toBe ')'
+          expect(results.matches[2].range).toEqual [[2, 25], [2, 26]]
+          expect(results.matches[2].linesBefore.length).toBe 2
+          expect(results.matches[2].linesBefore[0]).toBe 'var quicksort = function () {'
+          expect(results.matches[2].linesBefore[1]).toBe '  var sort = function(items) {  # followed by a pretty long comment which is used to check the maxLi'
+          expect(results.matches[2].linesAfter.length).toBe 3
+          expect(results.matches[2].linesAfter[0]).toBe '    var pivot = items.shift(), current, left = [], right = [];'
+          expect(results.matches[2].linesAfter[1]).toBe '    while(items.length > 0) {'
+          expect(results.matches[2].linesAfter[2]).toBe '      current = items.shift();'
+
+          expect(results.matches[13].lineText).toBe '  return sort(Array.apply(this, arguments));'
+          expect(results.matches[13].matchText).toBe ')'
+          expect(results.matches[13].range).toEqual [[11, 42], [11, 43]]
+          expect(results.matches[13].linesBefore.length).toBe 2
+          expect(results.matches[13].linesBefore[0]).toBe '  };'
+          expect(results.matches[13].linesBefore[1]).toBe ''
+          expect(results.matches[13].linesAfter.length).toBe 1
+          expect(results.matches[13].linesAfter[0]).toBe '};'
 
     describe "With windows line endings", ->
       beforeEach ->

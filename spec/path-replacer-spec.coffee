@@ -58,7 +58,7 @@ describe "PathReplacer", ->
 
         replacedContent = '''
           var quicksort = function () {
-            var sort = function(omgwow) {
+            var sort = function(omgwow) {  # followed by a pretty long comment which is used to check the maxLineLength feature
               if (omgwow.length <= 1) return omgwow;
               var pivot = omgwow.shift(), current, left = [], right = [];
               while(omgwow.length > 0) {
