@@ -5,8 +5,7 @@ notifications:
     on_success: never
     on_failure: change
 
-node_js:
-  - 4
+node_js: 6
 
 sudo: false
 
