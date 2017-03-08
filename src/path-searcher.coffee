@@ -24,7 +24,7 @@ TRAILING_LINE_END_REGEX = /\r?\n?$/
 #
 # ```coffee
 # {PathSearcher} = require 'scandal'
-# searcher = new PathSearcher({lineCountBefore: 2, lineCountAfter: 3})
+# searcher = new PathSearcher({leadingContextLineCount: 2, trailingContextLineCount: 3})
 #
 # # You can subscribe to a `results-found` event
 # searcher.on 'results-found', (result) ->
@@ -50,8 +50,8 @@ TRAILING_LINE_END_REGEX = /\r?\n?$/
 #     "lineText": "Text in this file!",
 #     "lineTextOffset": 0,
 #     "range": [[9, 0], [9, 4]],
-#     "linesBefore": ["line #8", "line #9"],
-#     "linesAfter": ["line #11", "line #12", "line #13"]
+#     "leadingContextLines": ["line #8", "line #9"],
+#     "trailingContextLines": ["line #11", "line #12", "line #13"]
 #   }]
 # }
 # ```
@@ -71,8 +71,8 @@ TRAILING_LINE_END_REGEX = /\r?\n?$/
 #       "lineText": "Text in this file!",
 #       "lineTextOffset": 0,
 #       "range": [[9, 0], [9, 4]],
-#       "linesBefore": ["line #8", "line #9"],
-#       "linesAfter": ["line #11", "line #12", "line #13"]
+#       "leadingContextLines": ["line #8", "line #9"],
+#       "trailingContextLines": ["line #11", "line #12", "line #13"]
 #     }]
 #   }
 #   ```
@@ -97,18 +97,18 @@ class PathSearcher extends EventEmitter
   # * `options` {Object}
   #   * `maxLineLength` {Number} default `100`; The max length of the `lineText`
   #      component in a results object. `lineText` is the context around the matched text.
-  #   * `lineCountBefore` {Number} default `0`; The number of lines before the
+  #   * `leadingContextLineCount` {Number} default `0`; The number of lines before the
   #      matched line to include in the results object. Each line is subject
   #      to the `maxLineLength` limit.
-  #   * `lineCountAfter` {Number} default `0`; The number of lines after the
+  #   * `trailingContextLineCount` {Number} default `0`; The number of lines after the
   #      matched line to include in the results object. Each line is subject
   #      to the `maxLineLength` limit.
   #   * `wordBreakRegex` {RegExp} default `/[ \r\n\t;:?=&\/]/`;
   #      Used to break on a word when finding the context for a match.
-  constructor: ({@maxLineLength, @lineCountBefore, @lineCountAfter, @wordBreakRegex}={}) ->
+  constructor: ({@maxLineLength, @leadingContextLineCount, @trailingContextLineCount, @wordBreakRegex}={}) ->
     @maxLineLength ?= MAX_LINE_LENGTH
-    @lineCountBefore ?= LINE_COUNT_BEFORE
-    @lineCountAfter ?= LINE_COUNT_AFTER
+    @leadingContextLineCount ?= LINE_COUNT_BEFORE
+    @trailingContextLineCount ?= LINE_COUNT_AFTER
     @wordBreakRegex ?= WORD_BREAK_REGEX
 
   ###
@@ -164,9 +164,9 @@ class PathSearcher extends EventEmitter
       error = e
       @emit('file-error', error)
 
-    # remember @lineCountBefore recent lines already truncated to @maxLineLength
+    # remember @leadingContextLineCount recent lines already truncated to @maxLineLength
     recentLines = []
-    # remember recent matches from the last @lineCountAfter lines
+    # remember recent matches from the last @trailingContextLineCount lines
     recentMatches = []
 
     reader.on 'end', =>
@@ -180,29 +180,29 @@ class PathSearcher extends EventEmitter
     reader.on 'data', (chunk) =>
       lines = chunk.toString().replace(TRAILING_LINE_END_REGEX, '').split(LINE_END_REGEX)
       for line in lines
-        # update linesAfter of recent matches
-        if @lineCountAfter > 0
+        # update trailingContextLines of recent matches
+        if @trailingContextLineCount > 0
           for match in recentMatches
-            match.linesAfter.push(line.substr(0, @maxLineLength))
+            match.trailingContextLines.push(line.substr(0, @maxLineLength))
 
         lineMatches = @searchLine(regex, line, lineNumber++)
 
         if lineMatches?
           matches ?= []
           for match in lineMatches
-            match.linesBefore = recentLines.slice(recentLines.length - @lineCountBefore)
-            match.linesAfter = []
+            match.leadingContextLines = recentLines.slice(recentLines.length - @leadingContextLineCount)
+            match.trailingContextLines = []
             matches.push(match)
 
         # remove obsolete lines from recentLines
-        if @lineCountBefore > 0
-          while recentLines.length > @lineCountBefore
+        if @leadingContextLineCount > 0
+          while recentLines.length > @leadingContextLineCount
             recentLines.shift()
           recentLines.push(line.substr(0, @maxLineLength))
 
         # remove obsolete matches from recentMatches
-        if @lineCountAfter > 0
-          while recentMatches.length > 0 and recentMatches[0].range[0][0] < lineNumber - @lineCountAfter
+        if @trailingContextLineCount > 0
+          while recentMatches.length > 0 and recentMatches[0].range[0][0] < lineNumber - @trailingContextLineCount
             recentMatches.shift()
           if lineMatches?
             recentMatches.push(match) for match in lineMatches
