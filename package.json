@@ -23,7 +23,7 @@
     "argparse": "^1.0.2",
     "git-utils": "^5.0.0",
     "isbinaryfile": "^2.0.4",
-    "minimatch": "^2.0.9",
+    "minimatch": "^3.0.4",
     "split": "^1.0.0",
     "temp": "^0.8.3"
   },
