@@ -1,6 +1,6 @@
 {
   "name": "scandal",
-  "version": "3.1.0",
+  "version": "3.1.1-electron-4.0",
   "description": "Directory Search and Scan Utilities",
   "main": "./lib/scandal.js",
   "bin": {
@@ -21,7 +21,7 @@
   "homepage": "http://atom.github.io/scandal",
   "dependencies": {
     "argparse": "^1.0.2",
-    "git-utils": "^5.0.0",
+    "git-utils": "^5.6.0",
     "isbinaryfile": "^2.0.4",
     "minimatch": "^2.0.9",
     "split": "^1.0.0",
