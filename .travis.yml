@@ -15,4 +15,4 @@ addons:
   apt:
     packages:
     - build-essential
-    - clang-3.3
+    - clang-5.0
