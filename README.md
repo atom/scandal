@@ -1,7 +1,6 @@
 # scandal - Scandalous directory scanning and searching
 
-[![Build Status](https://travis-ci.org/atom/scandal.svg?branch=master)](https://travis-ci.org/atom/scandal)
-[![Deps](https://david-dm.org/atom/scandal.svg)](https://david-dm.org/atom/scandal)
+[![CI](https://github.com/atom/scandal/actions/workflows/ci.yml/badge.svg)](https://github.com/atom/scandal/actions/workflows/ci.yml)
 
 `scandal` provides two utilities:
 
