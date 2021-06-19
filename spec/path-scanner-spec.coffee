@@ -134,6 +134,7 @@ describe "PathScanner", ->
         runs -> scanner.scan()
         waitsFor -> finishedHandler.callCount > 0
         runs ->
+          expect(paths.length).toBe 1
           expect(paths).toContain path.join(rootPath, 'dir', 'file7_ignorable.rb')
 
       it "doesn't allow a local directory inclusion to override a global exclusion of a subdirectory", ->
@@ -144,6 +145,7 @@ describe "PathScanner", ->
         runs -> scanner.scan()
         waitsFor -> finishedHandler.callCount > 0
         runs ->
+          expect(paths.length).toBe 1
           expect(paths).toContain path.join(rootPath, 'newdir', 'deep_dir.js')
           expect(paths).not.toContain path.join(rootPath, 'newdir', 'seconddir', 'very_deep_dir.js')
 
@@ -167,6 +169,11 @@ describe "PathScanner", ->
         runs -> scanner.scan()
         waitsFor -> finishedHandler.callCount > 0
         runs ->
+          # symlink-to-file1.txt is a file on windows
+          if process.platform is 'win32'
+            expect(paths.length).toBe 9
+          else
+            expect(paths.length).toBe 8
           expect(paths).toContain path.join(rootPath, 'file1.txt')
           expect(paths).not.toContain path.join(rootPath, 'file4_noext')
           expect(paths).not.toContain path.join(rootPath, '.root', 'file3.txt')
@@ -180,6 +187,7 @@ describe "PathScanner", ->
         runs -> scanner.scan()
         waitsFor -> finishedHandler.callCount > 0
         runs ->
+          expect(paths.length).toBe 4
           expect(paths).toContain path.join(rootPath, 'file4_noext')
           expect(paths).toContain path.join(rootPath, 'file5_not_really_image.gif')
           expect(paths).not.toContain path.join(rootPath, 'file1.txt')
@@ -197,6 +205,7 @@ describe "PathScanner", ->
         runs -> scanner.scan()
         waitsFor -> finishedHandler.callCount > 0
         runs ->
+          expect(paths.length).toBe 4
           expect(paths).toContain path.join(rootPath, 'file4_noext')
           expect(paths).toContain path.join(rootPath, 'file5_not_really_image.gif')
           expect(paths).not.toContain path.join(rootPath, 'file1.txt')
@@ -215,6 +224,7 @@ describe "PathScanner", ->
         runs -> scanner.scan()
         waitsFor -> finishedHandler.callCount > 0
         runs ->
+          expect(paths.length).toBe 5
           expect(paths).toContain path.join(rootPath, 'file1.txt')
           expect(paths).toContain path.join(rootPath, 'file2.txt')
           expect(paths).toContain path.join(rootPath, 'file7_multibyte.txt')
