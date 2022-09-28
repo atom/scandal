@@ -1,4 +1,5 @@
-# scandal - Scandalous directory scanning and searching
+##### Atom and all repositories under Atom will be archived on December 15, 2022. Learn more in our [official announcement](https://github.blog/2022-06-08-sunsetting-atom/)
+ # scandal - Scandalous directory scanning and searching
 
 [![CI](https://github.com/atom/scandal/actions/workflows/ci.yml/badge.svg)](https://github.com/atom/scandal/actions/workflows/ci.yml)
 
