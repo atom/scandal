@@ -96,7 +96,10 @@ class PathScanner extends EventEmitter
   stat: (filePath) ->
     # lstat is SLOW, but what other way to determine if something is a directory or file ?
     # also, sync is about 200ms faster than async...
-    stat = fs.lstatSync(filePath)
+    try
+      stat = fs.lstatSync(filePath)
+    catch e
+      return null
 
     if @options.follow and stat.isSymbolicLink()
       if @isInternalSymlink(filePath)
